@@ -50,7 +50,7 @@ T_k(:,4,1)=IrradianzaDicembre.T;
 %% - Potenza nominale in condizioni STC -
 % STC <=> T=25°C, G(t)=1000 w/m^2 (massima irradianza)
 Pnom=327;
-Npannelli=200;
+Npannelli=400;
 Pnompv=Pnom*Npannelli;
 
 %% - Potenze generate dal fotovoltaico nei mesi -
@@ -223,7 +223,7 @@ title 'Residuo energetico Ottobre'
 
 %% - Costo dell'energia prelevata dalla batteria -
 costoBatteria = 10000; %€
-capacitaBatteria = 100*10e3; %100 Kwh in [wh]
+capacitaBatteria = 189*1e3; %189 Kwh in [wh]
 
 dod=BatteryHealth(:,1); % asse x
 nCicli_dod = BatteryHealth(:,2); % asse y come nCicli(dod)
@@ -249,6 +249,19 @@ figure(4)
 plot(hours,targetCosto(:,4,1))
 xlabel 'hours'
 ylabel 'Costo per consumo di Kwh [€]'
+
+%% Capacità residua batteria
+Cbatteria=zeros(1440,1);
+capacitaBatteria_kwh=capacitaBatteria / 1000;
+for i=1:1:1440
+    Cbatteria(i)=capacitaBatteria_kwh+Edelta_k_kwh(i,4,2);
+end
+
+plot(hours,Cbatteria);
+
+
+%% Inverter
+
 
 
 
