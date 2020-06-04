@@ -1,5 +1,5 @@
 clear all
-%close all
+close all
 clc
 
 %% - Loading Data -
@@ -385,3 +385,18 @@ figure(5)
  figure(6)
  plot(BatteryHealth(:,1),BatteryHealth(:,2))
  
+ %% - Inverter Efficiency -
+
+% Euro efficiency
+Ee = 0.03*Eff5 + 0.06*Eff10 + 0.13*Eff20 + 0.1*Eff30 + 0.48*Eff50 + 0.2*Eff100
+
+figure(6)
+plot(time_minutes, Edelta_k_aug_kwh, 'g')
+hold on
+plot(time_minutes, Edelta_k_aug_cloudy_kwh, 'b')
+plot(time_minutes, Edelta_k_aug_worst_kwh, 'r')
+hold off
+xlabel('Ore del giorno')
+ylabel('Energia (KWh)')
+title('Delta energia fotovoltaico - Agosto')
+datetick('x','HH:MM','keeplimits','keepticks')
