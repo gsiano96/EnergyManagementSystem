@@ -11,6 +11,8 @@ load Irradianze_medie_giornaliere_per_mesi/Matfile/Irradianza_Ottobre.mat
 
 load 'Matfile/Battery_health.mat'
 
+load 'Inverter/Solarmax_inverter.mat'
+
 %% - Scale temporali -
 hours=vector(:,1)/60;
 time=IrradianzaDicembre.time;
@@ -38,7 +40,7 @@ for i=1:1:4 % per ciascun mese
 end
 
 %% - Interpolazione fino a 1440 punti valore su ogni colonna di ogni pagina -
-G_k=interp1(time,G_k,hours,'spline');
+G_k=abs(interp1(time,G_k,hours,'spline'));
 
 %% - Temperatura nei mesi per 24 ore -
 % Solo massimo soleggiamento (1° pagina)
@@ -80,8 +82,8 @@ subplot(2,2,1)
 for i=1:1:3
     plot(hours,Ppv_k_kw(:,4,i));
     hold on
-    plot(hours,Pload_k_kw, 'r');
 end
+plot(hours,Pload_k_kw, 'r');
 legend('soleggiato','nuvoloso','caso peggiore','Pload(k)')
 xlabel 'hours'
 ylabel 'Ppv(k) [Kw]'
@@ -92,8 +94,8 @@ subplot(2,2,2)
 for i=1:1:3
     plot(hours,Ppv_k_kw(:,1,i));
     hold on
-    plot(hours,Pload_k_kw, 'r');
 end
+plot(hours,Pload_k_kw, 'r');
 legend('soleggiato','nuvoloso','caso peggiore','Pload(k)')
 xlabel 'hours'
 ylabel 'Ppv(k) [Kw]'
@@ -104,8 +106,8 @@ subplot(2,2,3)
 for i=1:1:3
     plot(hours,Ppv_k_kw(:,2,i));
     hold on
-    plot(hours,Pload_k_kw, 'r');
 end
+plot(hours,Pload_k_kw, 'r');
 legend('soleggiato','nuvoloso','caso peggiore','Pload(k)')
 xlabel 'hours'
 ylabel 'Ppv(k) [Kw]'
@@ -116,8 +118,8 @@ subplot(2,2,4)
 for i=1:1:3
     plot(hours,Ppv_k_kw(:,3,i));
     hold on
-    plot(hours,Pload_k_kw, 'r');
 end
+plot(hours,Pload_k_kw, 'r');
 legend('soleggiato','nuvoloso','caso peggiore','Pload(k)')
 xlabel 'hours'
 ylabel 'Ppv(k) [Kw]'
@@ -261,6 +263,64 @@ plot(hours,Cbatteria);
 
 
 %% Inverter
+
+Prel_k=SolarmaxInverter.relativePower/100;
+efficiency_k=SolarmaxInverter.efficiency/100;
+
+% Aggiunto lo 0 per uniformare l'asse
+Prel_k=[0;Prel_k];
+efficiency_k=[0.50;efficiency_k];
+
+% Prel_k = Pinput/Pinput_max con Pinput=Ppv
+% Efficiency è data dalla formula dell'euro-efficienza
+
+Pinput_max=400*1000; %w in DC
+Poutput_max=330*1000; %w in AC
+
+Pinput_k=Prel_k*Pinput_max;
+%cfr. Pinput_k con Ppv_k per vedere la potenza in ingresso
+Pout_k=efficiency_k.*Pinput_k;
+%Pout_k=efficiency_k*Poutput_max;
+
+%Plot (Pinput_k, Pout_k)
+figure(5)
+subplot(2,2,1)
+plot(Pinput_k/1000,Pout_k/1000)
+title('Caratteristica ingresso-uscita inverter Sunpower') 
+xlabel 'Pinput [kw]'
+ylabel 'Pout [kw]'
+
+% Interpolazione dei punti dell'asse Pinput corrispondenti a Ppv
+Ppv_out_k=abs(interp1(Pinput_k,Pout_k,Ppv_k(:,4,1),'linear')); %1440x1 results
+
+subplot(2,2,2)
+plot(Ppv_k(:,4,1)/1000,Ppv_out_k/1000);
+hold on
+title("Potenza del fotovoltaico in uscita dall'inverter")
+xlabel 'Ppv(k) [Kw]'
+ylabel 'Ppv-out(k) [Kw]'
+
+% Calcolo del residuo di potenza tra quello prodotto e assorbito
+Presiduo_k=Ppv_out_k - Pload_k;
+
+subplot(2,2,3)
+plot(hours,Ppv_out_k/1000)
+hold on
+plot(hours,Pload_k/1000)
+hold on
+plot(hours,Presiduo_k/1000)
+legend('Ppv-out(k)','Pload(k)', 'Presiduo(k)')
+title('Potenze ogni minuto')
+xlabel 'ore'
+ylabel 'Potenze [Kw]'
+
+% Presiduo negativo => Potenza assorbita dalla batteria
+% Presiduo positivo => Potenza fornita alla batteria
+
+
+
+
+
 
 
 
