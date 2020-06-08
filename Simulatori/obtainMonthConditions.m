@@ -13,7 +13,7 @@ function y = obtainMonthConditions(probabilities, periodVect, monthLen)
         conditions(i) = index;
     end
     if(monthLen<31)
-        conditions(monthLen:31)=0;
+        conditions(monthLen+1:31)=0;
     end
     
     y = conditions';

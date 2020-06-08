@@ -1,16 +1,4 @@
-% load ./IrradianceData/January.mat
-% load ./IrradianceData/February.mat
-% load ./IrradianceData/March.mat
-% load ./IrradianceData/Irradianza_Aprile.mat
-% load ./IrradianceData/May.mat
-% load ./IrradianceData/June.mat
-% load ./IrradianceData/July.mat
-% load ./IrradianceData/Irradianza_Agosto.mat
-% load ./IrradianceData/September.mat
-% load ./IrradianceData/Irradianza_Ottobre.mat
-% load ./IrradianceData/November.mat
-% load ./IrradianceData/Irradianza_Dicembre.mat
-% yearIrradiance=[IrradianzaGennaio.G,IrradianzaFebbraio.G,IrradianzaMarzo.G,IrradianzaAprile.G,IrradianzaMaggio.G,IrradianzaGiugno.G,IrradianzaLuglio.G,IrradianzaAgosto.G,IrradianzaSettembre.G,IrradianzaOttobre.G,IrradianzaNovembre.G,IrradianzaDicembre.G]
+load ./IrradianceData/yearIrradiance.mat
 
 totalmatrix=monthsCloudyOcc;
 pcloud=[]
@@ -21,4 +9,14 @@ end
 year=zeros(31,12);
 for i=1:12
     year(:,i)=obtainMonthConditions(pcloud(i,:),totalmatrix(:,i),monthdays(i));
+end
+for i=0:11
+    ytmp(:,1+(31*i):31*(i+1))=dailyIrradiance(year(:,i+1),yearIrradiance(:,i+1));
+end
+j=1;
+for i=1:length(ytmp)
+    if(sum(ytmp(:,i))~=0)
+        y(:,j)=ytmp(:,i);  
+        j=j+1;
+    end
 end

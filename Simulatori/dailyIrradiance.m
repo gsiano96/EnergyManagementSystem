@@ -6,15 +6,15 @@ function y=dailyIrradiance(month,irradiance)
     y=[]
     for i=1:31
         if(month(i)==1)
-            y(:,i)=extimateIrradiance(irradiance+irradiance*0.3,20)
+            y(:,i)=extimateIrradiance(irradiance+irradiance*0.3,20);
         elseif(month(i)==2)
-            y(:,i)=extimateIrradiance(irradiance,100)
+            y(:,i)=extimateIrradiance(irradiance,100);
         elseif(month(i)==3)
-            y(:,i)=extimateIrradiance(irradiance-0.4*irradiance,20)
+            y(:,i)=extimateIrradiance(irradiance-0.4*irradiance,20);
         elseif(month(i)==4)
-            y(:,i)=extimateIrradiance(irradiance-0.8*irradiance,80)
+            y(:,i)=extimateIrradiance(irradiance-0.8*irradiance,80);
         else
-            y(i)=zeros(24,i);
+            y(:,i)=zeros(24,1);
         end
     end
 end
