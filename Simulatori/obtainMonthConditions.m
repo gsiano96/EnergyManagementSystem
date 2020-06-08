@@ -12,6 +12,9 @@ function y = obtainMonthConditions(probabilities, periodVect, monthLen)
         [maxim,index] = max([expa,expb,expc,expd]);
         conditions(i) = index;
     end
+    if(monthLen<31)
+        conditions(monthLen:31)=0;
+    end
     
-    y = conditions;
+    y = conditions';
 end

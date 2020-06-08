@@ -1,0 +1,17 @@
+function y=dailyIrradiance(month)
+    load ./IrradianceData/Irradianza_Agosto.mat
+    load ./IrradianceData/Irradianza_Aprile.mat
+    load ./IrradianceData/Irradianza_Dicembre.mat
+    load ./IrradianceData/Irradianza_Ottobre.mat
+    y=[]
+    for i=1:31
+        if(month(i)==1)
+            y(:,i)=extimateIrradiance()
+        elseif(month(i)==2)
+        elseif(month(i)==3)
+        elseif(month(i)==4)
+        else
+            y(i)=zeros(24,i);
+        end
+    end
+end
