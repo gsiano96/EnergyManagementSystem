@@ -166,5 +166,5 @@ function y = monthsCloudyOcc
     
     dec = [dec10;dec11;dec12;dec13;dec14;dec15;dec16;dec17;dec18;dec19;0];
     
-    y = [gen,feb,mar,apr,may,jun,jul,aug,sep,oct,nov,dec]
+    y = [gen,feb,mar,apr,may,jun,jul,aug,sep,oct,nov,dec];
 end

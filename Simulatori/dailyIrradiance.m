@@ -1,20 +1,18 @@
-function y=dailyIrradiance(month,irradiance)
-    load ./IrradianceData/Irradianza_Agosto.mat
-    load ./IrradianceData/Irradianza_Aprile.mat
-    load ./IrradianceData/Irradianza_Dicembre.mat
-    load ./IrradianceData/Irradianza_Ottobre.mat
-    y=[]
+function [irradianceYear, temperatureYear]=dailyIrradiance(month,irradiance,temperature)
+    irradianceYear=[];
+    temperatureYear=[];
     for i=1:31
         if(month(i)==1)
-            y(:,i)=extimateIrradiance(irradiance+irradiance*0.3,20);
+            [irradianceYear(:,i),temperatureYear(:,i)]=extimateIrradiance(irradiance+irradiance*0.3,20,temperature+temperature*0.3,0.5);
         elseif(month(i)==2)
-            y(:,i)=extimateIrradiance(irradiance,100);
+            [irradianceYear(:,i),temperatureYear(:,i)]=extimateIrradiance(irradiance,100,temperature,0.8);
         elseif(month(i)==3)
-            y(:,i)=extimateIrradiance(irradiance-0.4*irradiance,20);
+            [irradianceYear(:,i),temperatureYear(:,i)]=extimateIrradiance(irradiance-0.4*irradiance,20,temperature-0.4*temperature,1);
         elseif(month(i)==4)
-            y(:,i)=extimateIrradiance(irradiance-0.8*irradiance,80);
+            [irradianceYear(:,i),temperatureYear(:,i)]=extimateIrradiance(irradiance-0.8*irradiance,80,temperature-0.8*temperature,1.5);
         else
-            y(:,i)=zeros(24,1);
+            irradianceYear(:,i)=zeros(24,1);
+            temperatureYear(:,i)=zeros(24,1);
         end
     end
 end
