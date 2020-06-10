@@ -317,16 +317,66 @@ ylabel 'Potenze [Kw]'
 % Presiduo negativo => Potenza assorbita dalla batteria
 % Presiduo positivo => Potenza fornita alla batteria
 
+%% - Residuo energetico per batteria -
 
+% Non tutta la potenza residua è utilizzata per scaricare/caricare la
+% batteria in quanto il flusso energetico in uscita/ingresso è frazionato
+% dal rendimento del suo inverter.
 
+rendimentoInverterBatteria = 0.95; 
 
+% Non tutta la potenza in ingresso/uscita è utilizzata per 
+% caricare/scaricare la batteria a causa del suo rendimento di 
+% carica/scarica.
 
+% Efficienza_coloumbiana = scarica_totale [C=Ah] / carica_totale [C=Ah]
 
+rendimentoBatteria = 0.98;
 
+% Flusso di potenza input/output in uscita/ingresso dall'inverter
+%Presiduo_bat_inverter = Presiduo_k*rendimentoInverterBatteria;
 
+% Flusso di potenza per scaricare/caricare la batteria
+for i=1:1:length(Presiduo_k)
+    if (Presiduo_k(i) <= 0)
+        Pbat_scarica_k(i) = Presiduo_k(i);
+        Pbat_carica_k(i) = 0; 
+    else
+        Pbat_scarica_k(i) = 0;
+        Pbat_carica_k(i) = Presiduo_k(i) * rendimentoInverterBatteria;
+    end
+end
 
-        
-        
-    
-    
+% Plot dei risultati sull'ultimo subplot
+subplot(2,2,4)
+plot(hours,Pbat_scarica_k/1000,hours,Pbat_carica_k/1000)
+legend('Pscarica(k)','Pcarica(k)')
+title('Profili di scarica/carica della batteria')
+xlabel 'ore'
+ylabel 'Potenze [Kw]'
+
+Pbat_k=Pbat_scarica_k+Pbat_carica_k;
+
+% Energia di scarica & carica della batteria
+Ebat_k(1)=capacitaBatteria;
+for i=2:1:length(Pbat_k)
+    Ebat_k(i)=Ebat_k(i-1)+(Pbat_k(i)+Pbat_k(i-1))*0.0167/2;
+end
+%Equivalente a: Ebat_k=cumtrapz(hours,Pbat) + Ebat(1);
+
+%Plot potenza batteria ed energia
+figure(6)
+subplot(1,2,1)
+plot(hours,Pbat_k/1000)
+title('Potenza di scarica & carica della batteria')
+xlabel 'hours'
+ylabel 'Pbat(k) [KW]'
+
+subplot(1,2,2)
+plot(hours,Ebat_k/1000)
+yline(capacitaBatteria_kwh,'-r','CapacitàBatteria = 189 KWh');
+yline(capacitaBatteria_kwh*0.10,'-r','LimiteDiScarica = 18.9 KWh');
+title('Energia di scarica & carica della batteria')
+xlabel 'hours'
+ylabel 'Ebat(k) [KWh]'
 
