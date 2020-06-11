@@ -18,8 +18,7 @@ for i=1:12
 end
 
 for i=0:11
-    [yirr(:,1+(31*i):31*(i+1)),ytmp(:,1+(31*i):31*(i+1))]=dailyIrradiance(year(:,i+1),yearIrradiance(:,i+1) ...
-        ,yearTemperature(:,i+1));
+    yirr(:,1+(31*i):31*(i+1))=dailyIrradiance(year(:,i+1),yearIrradiance(:,i+1));
 end
 
 
@@ -28,7 +27,6 @@ j=1;
 for i=1:length(yirr)
     if(sum(yirr(:,i))~=0)
         irradianceYearSimulation(:,j)=yirr(:,i);  
-        temperatureYearSimulation(:,j)=ytmp(:,i);
         j=j+1;
     end
 end
