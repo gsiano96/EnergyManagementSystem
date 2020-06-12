@@ -380,3 +380,21 @@ title('Energia di scarica & carica della batteria')
 xlabel 'hours'
 ylabel 'Ebat(k) [KWh]'
 
+%% - Ottimizzazione inverter -
+targetPrel=Ppv_k / Pinput_max;
+
+figure(7)
+plot(Prel_k,efficiency_k)
+for i=1:150:length(targetPrel)
+    xline(targetPrel(i),'-r',targetPrel(i));
+end
+title('Inverter Rendimento AC in uscita - Rendimento DC in ingresso');
+xlabel 'Rendimento DC [%]'
+ylabel 'Rendimento AC [%]'
+
+% Le potenze generate dal fotovoltaico (Dicembre-soleggiato) 
+% ogni minuto ricadono interamente
+% nella regione di minimo rendimento in ingresso. Si conclude pertanto che
+% l'inverter è sovradimensionato rispetto alle potenze generate, ed è dunque
+% necessario usarne un'altro con potenza nominale più bassa.
+
