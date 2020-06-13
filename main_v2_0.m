@@ -55,14 +55,27 @@ N_tot_pnl = 400; %200
 P_nom_field = N_tot_pnl * P_nom_pnl; %[W] - Condizioni STC(1000W/m^2 - 25°)
 
 %% - Battery Characteristics -
-%DATI DA DEFINIRE
+
+% Sonnen Battery 
 %Modules characteristics
 n_mod = 3;
 C_mod = 16500;    % [Wh]
 C_tot = C_mod*n_mod; % 49.5[kWh]
 
 %Battery lifecycle characteristics
-cycles = 10000;
+cycles = 10000; % [n. cicli costante con dod al 90% di scarica]
+cost_mod = 9000; % [€]
+cost_tot = cost_mod * n_mod; % [€]
+cost_cycle = cost_tot/cycles; 
+
+% Our Battery 
+%Modules characteristics
+n_mod = 3;
+C_mod = 16500;    % [Wh]
+C_tot = C_mod*n_mod; % 49.5[kWh]
+
+%Battery lifecycle characteristics
+cycles = 10000; % [n. cicli costante con dod al 90% di scarica]
 cost_mod = 9000; % [€]
 cost_tot = cost_mod * n_mod; % [€]
 cost_cycle = cost_tot/cycles; 
@@ -381,22 +394,10 @@ figure(5)
     legend ('Max Soleggiamento', 'Nuvoloso', 'Min Soleggiamento')
     
  %% - Battery health -
- load 'Battery_health.mat'
- figure(6)
- plot(BatteryHealth(:,1),BatteryHealth(:,2))
- 
- %% - Inverter Efficiency -
-
-% Euro efficiency
-Ee = 0.03*Eff5 + 0.06*Eff10 + 0.13*Eff20 + 0.1*Eff30 + 0.48*Eff50 + 0.2*Eff100
-
+load 'Battery_health.mat'
 figure(6)
-plot(time_minutes, Edelta_k_aug_kwh, 'g')
-hold on
-plot(time_minutes, Edelta_k_aug_cloudy_kwh, 'b')
-plot(time_minutes, Edelta_k_aug_worst_kwh, 'r')
-hold off
-xlabel('Ore del giorno')
-ylabel('Energia (KWh)')
-title('Delta energia fotovoltaico - Agosto')
-datetick('x','HH:MM','keeplimits','keepticks')
+plot(BatteryHealth(:,1),BatteryHealth(:,2))
+ 
+%% - Battery Energy  -
+
+ %% - Inverter Efficiency -

@@ -1,4 +1,7 @@
-clear all; clc; close all;
+%% - Operazioni di Pulizia -
+clear all; 
+clc; 
+close all;
 
 %% - Caricamento dati -
 load Matfile/energy_hourly_cost.mat
@@ -224,7 +227,7 @@ ylabel 'Energy [Kwh]'
 title 'Residuo energetico Ottobre'
 
 %% - Costo dell'energia prelevata dalla batteria -
-costoBatteria = 10000; %€
+costoBatteria = 10000; % €
 capacitaBatteria = 189*1e3; %189 Kwh in [wh]
 
 dod=BatteryHealth(:,1); % asse x
@@ -249,6 +252,7 @@ end
 %% Grafici costi di consumo dell'energia dalla batteria (4)
 figure(4)
 plot(hours,targetCosto(:,4,1))
+title('Costi di consumo energia dalla batteria') 
 xlabel 'hours'
 ylabel 'Costo per consumo di Kwh [€]'
 
@@ -274,8 +278,9 @@ efficiency_k=[0.50;efficiency_k];
 % Prel_k = Pinput/Pinput_max con Pinput=Ppv
 % Efficiency è data dalla formula dell'euro-efficienza
 
-Pinput_max=400*1000; %w in DC
-Poutput_max=330*1000; %w in AC
+%% ATTENZIONE non possiamo scendere sotto i 120Kw per non avere un fenomeno di power clipping
+Pinput_max=120*1000; %w in DC
+Poutput_max=80*1000; %w in AC
 
 Pinput_k=Prel_k*Pinput_max;
 %cfr. Pinput_k con Ppv_k per vedere la potenza in ingresso
@@ -284,33 +289,167 @@ Pout_k=efficiency_k.*Pinput_k;
 
 %Plot (Pinput_k, Pout_k)
 figure(5)
-subplot(2,2,1)
 plot(Pinput_k/1000,Pout_k/1000)
 title('Caratteristica ingresso-uscita inverter Sunpower') 
 xlabel 'Pinput [kw]'
 ylabel 'Pout [kw]'
 
 % Interpolazione dei punti dell'asse Pinput corrispondenti a Ppv
-Ppv_out_k=abs(interp1(Pinput_k,Pout_k,Ppv_k(:,4,1),'linear')); %1440x1 results
+Ppv_out_k=abs(interp1(Pinput_k,Pout_k,Ppv_k,'linear')); %1440x1 results
 
-subplot(2,2,2)
-plot(Ppv_k(:,4,1)/1000,Ppv_out_k/1000);
-hold on
-title("Potenza del fotovoltaico in uscita dall'inverter")
+% Dicembre
+figure(6)
+subplot(2,2,1)
+for i=1:1:3
+    plot(Ppv_k(:,4,i)/1000,Ppv_out_k(:,4,i)/1000)
+    hold on
+end
+legend('soleggiato','nuvoloso','caso peggiore');
 xlabel 'Ppv(k) [Kw]'
 ylabel 'Ppv-out(k) [Kw]'
+title("Potenza del fotovoltaico in uscita dall'inverter Dicembre")
 
-% Calcolo del residuo di potenza tra quello prodotto e assorbito
-Presiduo_k=Ppv_out_k - Pload_k;
+% Aprile
+subplot(2,2,2)
+for i=1:1:3
+    plot(Ppv_k(:,1,i)/1000,Ppv_out_k(:,1,i)/1000)
+    hold on
+end
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'Ppv(k) [Kw]'
+ylabel 'Ppv-out(k) [Kw]'
+title("Potenza del fotovoltaico in uscita dall'inverter Aprile")
 
+% Agosto
 subplot(2,2,3)
-plot(hours,Ppv_out_k/1000)
-hold on
-plot(hours,Pload_k/1000)
-hold on
-plot(hours,Presiduo_k/1000)
-legend('Ppv-out(k)','Pload(k)', 'Presiduo(k)')
-title('Potenze ogni minuto')
+for i=1:1:3
+    plot(Ppv_k(:,2,i)/1000,Ppv_out_k(:,2,i)/1000)
+    hold on
+end
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'Ppv(k) [Kw]'
+ylabel 'Ppv-out(k) [Kw]'
+title("Potenza del fotovoltaico in uscita dall'inverter Agosto")
+
+
+% Ottobre
+subplot(2,2,4)
+for i=1:1:3
+    plot(Ppv_k(:,3,i)/1000,Ppv_out_k(:,3,i)/1000)
+    hold on
+end
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'Ppv(k) [Kw]'
+ylabel 'Ppv-out(k) [Kw]'
+title("Potenza del fotovoltaico in uscita dall'inverter Ottobre")
+
+%% Potenza d'uscita dal fotovoltaico per tutti i mesi e casi
+
+figure(7)
+% Aprile
+subplot(2,2,1)
+for i=1:1:3
+    plot(hours,Ppv_out_k(:,1,i)/1000)
+    hold on
+end
+plot(hours,Pload_k/1000,'r')
+legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+title('Ppv-out(k) Aprile')
+xlabel 'ore'
+ylabel 'Potenze [Kw]'
+
+% Agosto
+subplot(2,2,2)
+for i=1:1:3
+    plot(hours,Ppv_out_k(:,2,i)/1000)
+    hold on
+    axis auto
+end
+plot(hours,Pload_k/1000,'r')
+legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+title('Ppv-out(k) Agosto')
+xlabel 'ore'
+ylabel 'Potenze [Kw]'
+axis ([0 24 0 120])
+
+% Ottobre
+subplot(2,2,3)
+for i=1:1:3
+    plot(hours,Ppv_out_k(:,3,i)/1000)
+    hold on
+end
+plot(hours,Pload_k/1000,'r')
+legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+title('Ppv-out(k) Ottobre')
+xlabel 'ore'
+ylabel 'Potenze [Kw]'
+
+% Dicembre
+subplot(2,2,4)
+for i=1:1:3
+    plot(hours,Ppv_out_k(:,4,i)/1000)
+    hold on
+end
+plot(hours,Pload_k/1000,'r')
+legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+title('Ppv-out(k) Dicembre')
+xlabel 'ore'
+ylabel 'Potenze [Kw]'
+
+%% Calcolo del residuo di potenza tra quello prodotto e assorbito
+for j=1:1:4
+    for k=1:1:3
+        Presiduo_k(:,j,k) = Ppv_out_k(:,j,k) - Pload_k;
+    end
+end
+
+figure(8)
+% Aprile
+subplot(2,2,1)
+for i=1:1:3
+    plot(hours,Presiduo_k(:,1,i)/1000)
+    hold on
+end
+plot(hours,Pload_k/1000,'r')
+legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+title('Presiduo(k) Aprile')
+xlabel 'ore'
+ylabel 'Potenze [Kw]'
+
+% Agosto
+subplot(2,2,2)
+for i=1:1:3
+    plot(hours,Presiduo_k(:,2,i)/1000)
+    hold on
+end
+plot(hours,Pload_k/1000,'r')
+legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+title('Presiduo(k) Agosto')
+xlabel 'ore'
+ylabel 'Potenze [Kw]'
+axis ([0 24 -20 100])
+
+% Ottobre
+subplot(2,2,3)
+for i=1:1:3
+    plot(hours,Presiduo_k(:,3,i)/1000)
+    hold on
+end
+plot(hours,Pload_k/1000,'r')
+legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+title('Presiduo(k) Ottobre')
+xlabel 'ore'
+ylabel 'Potenze [Kw]'
+
+% Dicembre
+subplot(2,2,4)
+for i=1:1:3
+    plot(hours,Presiduo_k(:,4,i)/1000)
+    hold on
+end
+plot(hours,Pload_k/1000,'r')
+legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+title('Presiduo(k) Dicembre')
 xlabel 'ore'
 ylabel 'Potenze [Kw]'
 
@@ -348,7 +487,7 @@ for i=1:1:length(Presiduo_k)
 end
 
 % Plot dei risultati sull'ultimo subplot
-subplot(2,2,4)
+subplot(1,2,1)
 plot(hours,Pbat_scarica_k/1000,hours,Pbat_carica_k/1000)
 legend('Pscarica(k)','Pcarica(k)')
 title('Profili di scarica/carica della batteria')
@@ -365,7 +504,7 @@ end
 %Equivalente a: Ebat_k=cumtrapz(hours,Pbat) + Ebat(1);
 
 %Plot potenza batteria ed energia
-figure(6)
+figure(8)
 subplot(1,2,1)
 plot(hours,Pbat_k/1000)
 title('Potenza di scarica & carica della batteria')
@@ -383,9 +522,9 @@ ylabel 'Ebat(k) [KWh]'
 %% - Ottimizzazione inverter -
 targetPrel=Ppv_k / Pinput_max;
 
-figure(7)
+figure(9)
 plot(Prel_k,efficiency_k)
-for i=1:150:length(targetPrel)
+for i=1:10:length(targetPrel)
     xline(targetPrel(i),'-r',targetPrel(i));
 end
 title('Inverter Rendimento AC in uscita - Rendimento DC in ingresso');
