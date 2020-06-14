@@ -132,54 +132,14 @@ figure(3)
         title('Differenza energia prodotta-consumata')
         datetick('x','HH:MM','keeplimits','keepticks')
 
-%% - Year simulation grezza - 
+% %% - Year simulation grezza - 
 Eload_fix=cumtrapz(0.0167,Pload_k); %Energy consumed at each step of 0.0167 hours
 Eload_fix_kwh=Eload_fix/1000; %[kWh]
 
-C_act = 0;
-Enel = 0;
-Conta_carica = 0;
+[wastedKwDay,moneySpentDay,moneyEarnedDay] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw);
 
-for d=1:365
-    %%Calculate daily energy produced  
-    P_day = (P_nom_field/1000)*irradianceYearSimulation(:,d); %[W]
-    P_d_min = spline(1:60:1440, P_day, 1:1440); %[W]
-    P_d_min_kw = P_d_min/1000; %[kW]
-    G_d=irradianceYearSimulation(:,240);
-    G_d_min=spline(1:60:1440,G_d,1:1440);   
-    Epv_d=cumtrapz(0.0167,P_d_min); %Energy produced at each step
-    Epv_d_kwh=Epv_d/1000; %[kWh]
-    flag = 0;
-    for h=1:1440
-        if h>1
-            Epv_d_act = Epv_d_kwh(h)-Epv_d_kwh(h-1);
-            Eload_fix_act = Eload_fix_kwh(h) - Eload_fix_kwh(h-1);
-        else
-            Epv_d_act = Epv_d_kwh(h);
-            Eload_fix_act = Eload_fix_kwh(h);
-        end
-        if Epv_d_act < Eload_fix_act
-            diff = Eload_fix_act - Epv_d_act;
-            if C_act > diff
-                C_act = C_act-diff;
-            else
-                Enel = Enel + diff;
-            end
-        else
-            plus = Epv_d_act - Eload_fix_act;
-            if plus > 0
-                C_act = C_act+plus;
-                if C_act >= C_tot_kw
-                    C_act = C_tot_kw;
-                    flag = 1;
-                end
-            end
-        end
-    end
-    if flag == 1
-        Conta_carica = Conta_carica + 1;
-    end
-end
-    
-        
+[wastedKwDay_no_cost,moneySpentDay_no_cost,moneyEarnedDay_no_cost, recharge_cycle_no_cost] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw, cost_cycle, Eload_fix_kwh);
 
+moneySpentYear_no_panel = strategy_no_panel(Eload_k_kwh, costi);
+
+[wastedKwDay_night_buy,moneySpentDay_night_buy,moneyEarnedDay_night_buy,recharge_cycle_night_buy] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,0.5);
