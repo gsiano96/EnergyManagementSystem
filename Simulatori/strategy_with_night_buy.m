@@ -1,5 +1,5 @@
-function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,max_charge)    
-DoD=0.9;
+function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,max_charge,DoD)    
+    
     cost_kw_battery = cost_cycle/(C_tot_kw*DoD);
     costEnergy=spline(1:60:1440,costi,1:1440)./1000;
     costi_kw_min_vend=costEnergy-costEnergy*0.5;
@@ -50,6 +50,7 @@ DoD=0.9;
                 else
                     Enel = Enel + diff;%take difference from the vendor
                     Enel_eur = Enel_eur + costEnergy(h)*diff;
+                    moneySpent = moneySpent + diff*costEnergy(h);
                 end
             else
                 plus = Epv_d_act - Eload_fix_act;%if the energy produced by PV is more than the load request
@@ -59,8 +60,9 @@ DoD=0.9;
                     if C_act >= C_tot_kw%if the battery is full do not charge it
                         kw_butt = kw_butt + C_act-C_tot_kw;
                         profit = profit + (C_act-C_tot_kw)*costi_kw_min_vend(h);
-                        C_act = C_tot_kw;
                         counter_charger=counter_charger-(C_act-C_tot_kw)/C_tot_kw;
+                        C_act = C_tot_kw;
+                        
                         flag = 1;
                     end
                     if(counter_charger>=DoD)

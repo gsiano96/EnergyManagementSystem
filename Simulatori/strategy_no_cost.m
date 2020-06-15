@@ -1,4 +1,4 @@
-function [wastedKwDay,moneySpentDay,moneyEarnedDay] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw)
+function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw)
 
 costEnergy=spline(1:60:1440,costi,1:1440)./1000;
 costi_kw_min_vend=costEnergy-costEnergy*0.5;
@@ -6,6 +6,8 @@ C_act = 0;
     Enel = 0;
     Conta_carica = 0;
     C_act_count = zeros(1440,365);
+    recharge_cycle=0;
+    counter_charger=0;
    
     for d=1:365
         %%Calculate daily energy produced
@@ -38,11 +40,18 @@ C_act = 0;
                 plus = Epv_d_act - Eload_fix_act;%if the energy produced by PV is more than the load request
                 if plus > 0
                     C_act = C_act+plus;%charge the battery
+                    counter_charger=counter_charger+plus/C_tot_kw;
                     if C_act >= C_tot_kw%if the battery is full do not charge it
                         kw_butt = kw_butt + C_act-C_tot_kw;
                         profit = profit + (C_act-C_tot_kw)*costi_kw_min_vend(h);
                         C_act = C_tot_kw;
+                        counter_charger=counter_charger-(C_act-C_tot_kw)/C_tot_kw;
                         flag = 1;
+                        
+                    end
+                    if(counter_charger>1)
+                        counter_charger=counter_charger-1;
+                        recharge_cycle=recharge_cycle+1;
                     end
                 end
             end

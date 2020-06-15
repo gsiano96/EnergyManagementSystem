@@ -74,17 +74,6 @@ cost_mod=1600;
 cost_tot=cost_mod*n_mod;
 cost_cycle = cost_tot/cycles;
 
-%% Ma proprio veramente cvhe più pezzotta non si può
-%https://www.alibaba.com/product-detail/Extra-long-5000-Cycle-Times-Rechargeable_1349859896.html?spm=a2700.7735675.normalList.1.4c4f4c67hWiKk4
-n_mod = 175;
-C_mod=210/n_mod;
-C_tot_kw=C_mod*n_mod;
-
-cycles = 5000;
-cost_mod=221.85;
-cost_tot=cost_mod*n_mod;
-cost_cycle = cost_tot/cycles;
-
 %% - Generate Casual Year - 
 totalmatrix=monthsCloudyOcc;
 pcloud=[];
@@ -192,11 +181,11 @@ title("Difference")
 
 [wastedKwDay_no_cost,moneySpentDay_no_cost,moneyEarnedDay_no_cost, recharge_no_cost] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw);
 
-[wastedKwDay_DoD,moneySpentDay_DoD,moneyEarnedDay_DoD, recharge_cycle_DoD] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw, cost_cycle, Eload_fix_kwh,0.9);
+[wastedKwDay_DoD,moneySpentDay_DoD,moneyEarnedDay_DoD, recharge_cycle_DoD] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw, cost_cycle, Eload_fix_kwh,0.8);
 
 moneySpentYear_no_panel = strategy_no_panel(Eload_k_kwh, costi);
 
-[wastedKwDay_night_buy,moneySpentDay_night_buy,moneyEarnedDay_night_buy,recharge_cycle_night_buy] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,0.3,0.9);
+[wastedKwDay_night_buy,moneySpentDay_night_buy,moneyEarnedDay_night_buy,recharge_cycle_night_buy] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,0.3,0.8);
 
 [wastedKwDay_only_panel, moneySpentDay_only_panel,moneyEarnedDay_only_panel] = strategy_only_panel(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi);
 
