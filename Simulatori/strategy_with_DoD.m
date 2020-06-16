@@ -1,3 +1,17 @@
+%{
+    Questa strategia è stata implementata tenendo conto di un impianto per
+    l'energia alternativa composto da pannelli solari nonché batteria per
+    l'immagazzinamento di energia prodotta in eccesso. Tale strategia tiene
+    conto del costo dell'energia e del DoD della batteria di modo chè la
+    stessa possa subire i cicli di carica corrispondenti a quanto
+    dichiarato dal datasheet. In linee generali non si discosta dalla
+    strategia "no_cost" ma viene effettuato un controllo sul costo
+    dell'energia stesso in fase di acquisto dell'energia così da acquisire
+    energia dalla fonte (gestore o batteria) che fornisce un costo minore
+    in quel momento. Nel caso in cui la batteria non sia sufficientemente
+    carica allora l'energia verrà acquistata solo dal gestore elettrico. La
+    gestione della sovrapproduzione è identica alla strategia "no_cost"
+%}
 function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,DoD)    
     cost_kw_battery = cost_cycle/(C_tot_kw*DoD);
     costEnergy=spline(1:60:1440,costi,1:1440)./1000;

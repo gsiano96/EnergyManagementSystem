@@ -1,3 +1,14 @@
+%{
+    Questa strategia è stata implementata tenendo conto di un impianto per
+    l'energia alternativa composto solo da pannelli solari senza tener
+    conto di eventuale batteria per lo stoccaggio di energia da
+    riutilizzare. Nel caso in cui i pannelli solari non riescano ad
+    alimentare il carico l'energia rimanente viene comprata dal gestore
+    elettrico al prezzo descritto dal profilo di costo orario. Nel caso in
+    cui si abbia una sovraproduzione di energia elettrica allora la stessa
+    viene rivenduta al gestore elettrico a metà del prezzo d'acquisto in
+    quella stessa ora.
+%}
 function [ wastedKwDay, moneySpentDay,moneyEarnedDay] = strategy_only_panel(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi)
 costEnergy=spline(1:60:1440,costi,1:1440)./1000;
 costi_kw_min_vend=costEnergy-costEnergy*0.5;

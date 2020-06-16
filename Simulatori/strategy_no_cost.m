@@ -1,3 +1,15 @@
+%{
+    Questa strategia non tiene conto del costo di acquisto dell'energia dal
+    fornitore ne di quello di erogazione energia da parte della batteria.
+    Essa confronta minuto per minuto l'energia prodotta dal campo
+    fotovoltaico con quella richiesta dal carico, nel caso in cui quella
+    del campo riesca a soddisfare il carico allora tutto viene assorbito
+    dal carico e l'eventuale resto viene inserito nella batteria, se ne può
+    ospitare, oppure venduto al gestore elettrico. Nel caso in cui il campo 
+    non riesca a fornire il necessario allora viene comunque presa energia 
+    dal campo ed il rimanente dalla batteria se ne dispone, in caso 
+    contrario dal gestore elettrico.
+%}
 function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw)
 
 costEnergy=spline(1:60:1440,costi,1:1440)./1000;

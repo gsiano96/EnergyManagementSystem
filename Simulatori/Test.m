@@ -4,7 +4,6 @@ clc
 
 load ../Matfile/energy_hourly_cost.mat
 load ../Matfile/daily_minute.mat
-load ./IrradianceData/yearIrradiance.mat
 
 start_time = datetime( '00:00', 'InputFormat', 'HH:mm' );
 start_time.Format = 'HH:mm:ss';
@@ -86,33 +85,8 @@ cost_tot=cost_mod*n_mod;
 cost_cycle = cost_tot/cycles;
 
 %% - Generate Casual Year - 
-totalmatrix=monthsCloudyOcc;
-pcloud=[];
-monthdays=[31,28,31,30,31,30,31,31,30,31,30,31];    
+irradianceYearSimulation = generateYearIrradiance;
 
-%Return the probability for the data type (1,2,3,4) for every month,
-%calculated by the 10 year experiments
-for i=1:12
-    pcloud(i,:)=cloudyProb(totalmatrix(find(totalmatrix(:,i)),i));
-end
-year=zeros(31,12);
-
-%Generate a casual year with different type of days in a mounth
-for i=1:12
-    year(:,i)=obtainMonthConditions(pcloud(i,:),totalmatrix(:,i),monthdays(i));
-end
-
-%Return the irradiance for each day of the year calculated previosly
-for i=0:11
-    yirr(:,1+(31*i):31*(i+1))=dailyIrradiance(year(:,i+1),yearIrradiance(:,i+1));
-end
-j=1;
-for i=1:length(yirr)
-    if(sum(yirr(:,i))~=0)
-        irradianceYearSimulation(:,j)=yirr(:,i);  
-        j=j+1;
-    end
-end
 %% - Analysis of sunshine conditions -  
 %Istant Power
 P_day = (P_nom_field/1000)*irradianceYearSimulation(:,240); %[W]
@@ -145,7 +119,7 @@ Eload_k_kwh=Eload_k/1000; %[kWh]
 %Difference between produced energy & consumed energy
 Edelta_k_kwh=Epv_k_kwh'-Eload_k_kwh; % [kWh]
 
-figure(3)
+figure(4)
         plot(time_minutes, Edelta_k_kwh)
         hold on
         plot(time_minutes, Eload_k_kwh)
@@ -173,7 +147,7 @@ dod=sum(moneySpentDay_DoD);
 nopan=sum(moneySpentYear_no_panel);
 notte=sum(moneySpentDay_night_buy);
 panne= sum(moneySpentDay_only_panel);
-figure(10)
+figure(5)
 subplot(321)
 stem([no, dod,nopan,notte,panne])
 xlim([-2,10])
@@ -186,9 +160,6 @@ subplot(325)
 stem([no-sum(moneyEarnedDay_no_cost), dod-sum(moneyEarnedDay_DoD),nopan-0,notte-sum(moneyEarnedDay_night_buy),panne-sum(moneyEarnedDay_only_panel)])
 xlim([-2,10])
 title("Difference")
-
-
-
 
 [wastedKwDay_no_cost,moneySpentDay_no_cost,moneyEarnedDay_no_cost, recharge_no_cost] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw);
 
@@ -205,7 +176,7 @@ dod=sum(moneySpentDay_DoD);
 nopan=sum(moneySpentYear_no_panel);
 notte=sum(moneySpentDay_night_buy);
 panne= sum(moneySpentDay_only_panel);
-figure(10)
+figure(5)
 subplot(322)
 stem([no, dod,nopan,notte,panne])
 xlim([-2,10])
@@ -218,3 +189,15 @@ subplot(326)
 stem([no-sum(moneyEarnedDay_no_cost), dod-sum(moneyEarnedDay_DoD),nopan-0,notte-sum(moneyEarnedDay_night_buy),panne-sum(moneyEarnedDay_only_panel)])
 xlim([-2,10])
 title("Difference")
+
+figure(6)
+plot(wastedKwDay_no_cost,'g')
+hold on
+plot(wastedKwDay_DoD,'b')
+plot(wastedKwDay_night_buy,'r')
+plot(wastedKwDay_only_panel,'y')
+hold off
+title("kWh Wasted");
+xlim([1,365])
+legend ('NoCost Strategy', 'DoD Strategy', 'NightBuy Strategy', 'OnlyPanel Strategy')
+

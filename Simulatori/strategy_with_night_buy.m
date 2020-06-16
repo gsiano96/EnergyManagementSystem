@@ -1,3 +1,14 @@
+%{
+    Questa strategia è stata implementata tenendo conto di un impianto per
+    l'energia alternativa composto da pannelli solari nonché batteria per
+    l'immagazzinamento di energia prodotta in eccesso. Tale strategia tiene
+    conto del costo dell'energia e del DoD della batteria di modo chè la
+    stessa possa subire i cicli di carica corrispondenti a quanto
+    dichiarato dal datasheet. In linee generali non si discosta dalla
+    strategia "no_cost" ma la batteria viene ricaricata fino ad una certa
+    percentuale ogni notte (se la stessa ha una carica inferiore) mentre di
+    giorno segue la normale impostazione delle altre strategie. 
+%}
 function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,max_charge,DoD)    
     
     cost_kw_battery = cost_cycle/(C_tot_kw*DoD);
