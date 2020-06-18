@@ -85,7 +85,7 @@ cost_tot=cost_mod*n_mod;
 cost_cycle = cost_tot/cycles;
 
 %% - Generate Casual Year - 
-irradianceYearSimulation = generateYearIrradiance;
+[irradianceYearSimulation,year] = generateYearIrradiance;
 
 %% - Analysis of sunshine conditions -  
 %Istant Power
@@ -132,13 +132,13 @@ figure(4)
 Eload_fix=cumtrapz(0.0167,Pload_k); %Energy consumed at each step of 0.0167 hours
 Eload_fix_kwh=Eload_fix/1000; %[kWh]
 
-[wastedKwDay_no_cost,moneySpentDay_no_cost,moneyEarnedDay_no_cost, recharge_no_cost] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw);
+[wastedKwDay_no_cost,moneySpentDay_no_cost,moneyEarnedDay_no_cost, recharge_no_cost,battery_daily_no_cost] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw);
 
-[wastedKwDay_DoD,moneySpentDay_DoD,moneyEarnedDay_DoD, recharge_cycle_DoD] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw, cost_cycle, Eload_fix_kwh,0.9);
+[wastedKwDay_DoD,moneySpentDay_DoD,moneyEarnedDay_DoD, recharge_cycle_DoD,battery_daily_DoD] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw, cost_cycle, Eload_fix_kwh,0.9);
 
 moneySpentYear_no_panel = strategy_no_panel(Eload_k_kwh, costi);
 
-[wastedKwDay_night_buy,moneySpentDay_night_buy,moneyEarnedDay_night_buy,recharge_cycle_night_buy] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,0.5,0.9);
+[wastedKwDay_night_buy,moneySpentDay_night_buy,moneyEarnedDay_night_buy,recharge_cycle_night_buy,battery_daily_night_buy] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,0.5,0.9);
 
 [wastedKwDay_only_panel, moneySpentDay_only_panel,moneyEarnedDay_only_panel] = strategy_only_panel(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi);
 
@@ -148,44 +148,15 @@ nopan=sum(moneySpentYear_no_panel);
 notte=sum(moneySpentDay_night_buy);
 panne= sum(moneySpentDay_only_panel);
 figure(5)
-subplot(321)
+subplot(311)
 stem([no, dod,nopan,notte,panne])
 xlim([-2,10])
 title("Money spent");
-subplot(323)
+subplot(312)
 stem([sum(moneyEarnedDay_no_cost), sum(moneyEarnedDay_DoD),0, sum(moneyEarnedDay_night_buy),sum(moneyEarnedDay_only_panel)])
 xlim([-2,10])
 title("Money earned");
-subplot(325)
-stem([no-sum(moneyEarnedDay_no_cost), dod-sum(moneyEarnedDay_DoD),nopan-0,notte-sum(moneyEarnedDay_night_buy),panne-sum(moneyEarnedDay_only_panel)])
-xlim([-2,10])
-title("Difference")
-
-[wastedKwDay_no_cost,moneySpentDay_no_cost,moneyEarnedDay_no_cost, recharge_no_cost] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw);
-
-[wastedKwDay_DoD,moneySpentDay_DoD,moneyEarnedDay_DoD, recharge_cycle_DoD] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw, cost_cycle, Eload_fix_kwh,0.9);
-
-moneySpentYear_no_panel = strategy_no_panel(Eload_k_kwh, costi);
-
-[wastedKwDay_night_buy,moneySpentDay_night_buy,moneyEarnedDay_night_buy,recharge_cycle_night_buy] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,0.3,0.9);
-
-[wastedKwDay_only_panel, moneySpentDay_only_panel,moneyEarnedDay_only_panel] = strategy_only_panel(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi);
-
-no=sum(moneySpentDay_no_cost);
-dod=sum(moneySpentDay_DoD);
-nopan=sum(moneySpentYear_no_panel);
-notte=sum(moneySpentDay_night_buy);
-panne= sum(moneySpentDay_only_panel);
-figure(5)
-subplot(322)
-stem([no, dod,nopan,notte,panne])
-xlim([-2,10])
-title("Money spent");
-subplot(324)
-stem([sum(moneyEarnedDay_no_cost), sum(moneyEarnedDay_DoD),0, sum(moneyEarnedDay_night_buy),sum(moneyEarnedDay_only_panel)])
-xlim([-2,10])
-title("Money earned");
-subplot(326)
+subplot(313)
 stem([no-sum(moneyEarnedDay_no_cost), dod-sum(moneyEarnedDay_DoD),nopan-0,notte-sum(moneyEarnedDay_night_buy),panne-sum(moneyEarnedDay_only_panel)])
 xlim([-2,10])
 title("Difference")
@@ -201,3 +172,43 @@ title("kWh Wasted");
 xlim([1,365])
 legend ('NoCost Strategy', 'DoD Strategy', 'NightBuy Strategy', 'OnlyPanel Strategy')
 
+figure(7)
+    subplot(331)
+        plot(battery_daily_no_cost(1:60*24:end))
+        title("Battery Percentage Daily - No Cost (00:00)");
+        xlim([1,365])
+    subplot(332)
+        plot(battery_daily_DoD(1:60*24:end))
+        title("Battery Percentage Daily - DoD (00:00)");
+        xlim([1,365])
+    subplot(333)
+        plot(battery_daily_night_buy(1:60*24:end))
+        title("Battery Percentage Daily - Night Buy (00:00)");
+        xlim([1,365])
+    subplot(334)
+        plot(battery_daily_no_cost(12*60:60*24:end))
+        title("Battery Percentage Daily - No Cost (12:00)");
+        xlim([1,365])
+    subplot(335)
+        plot(battery_daily_DoD(12*60:60*24:end))
+        title("Battery Percentage Daily - DoD (12:00)");
+        xlim([1,365])
+    subplot(336)
+        plot(battery_daily_night_buy(12*60:60*24:end))
+        title("Battery Percentage Daily - Night Buy (12:00)");
+        xlim([1,365])
+    subplot(337)
+        plot(battery_daily_no_cost(18*60:60*24:end))
+        title("Battery Percentage Daily - No Cost (18:00)");
+        xlim([1,365])
+    subplot(338)
+        plot(battery_daily_DoD(18*60:60*24:end))
+        title("Battery Percentage Daily - DoD (18:00)");
+        xlim([1,365])
+    subplot(339)
+        plot(battery_daily_night_buy(18*60:60*24:end))
+        title("Battery Percentage Daily - Night Buy (18:00)");
+        xlim([1,365])
+
+        
+    

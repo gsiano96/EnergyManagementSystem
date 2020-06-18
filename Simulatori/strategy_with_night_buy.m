@@ -9,7 +9,7 @@
     percentuale ogni notte (se la stessa ha una carica inferiore) mentre di
     giorno segue la normale impostazione delle altre strategie. 
 %}
-function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,max_charge,DoD)    
+function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle,battery_percentage_daily] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,max_charge,DoD)    
     
     cost_kw_battery = cost_cycle/(C_tot_kw*DoD);
     costEnergy=spline(1:60:1440,costi,1:1440)./1000;

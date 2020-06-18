@@ -12,7 +12,7 @@
     carica allora l'energia verrà acquistata solo dal gestore elettrico. La
     gestione della sovrapproduzione è identica alla strategia "no_cost"
 %}
-function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,DoD)    
+function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle,battery_percentage_daily] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,DoD)    
     cost_kw_battery = cost_cycle/(C_tot_kw*DoD);
     costEnergy=spline(1:60:1440,costi,1:1440)./1000;
     costi_kw_min_vend=costEnergy-costEnergy*0.5;

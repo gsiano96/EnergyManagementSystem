@@ -10,16 +10,18 @@
     dal campo ed il rimanente dalla batteria se ne dispone, in caso 
     contrario dal gestore elettrico.
 %}
-function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw)
+function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle, battery_percentage_daily] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw)
 
-costEnergy=spline(1:60:1440,costi,1:1440)./1000;
-costi_kw_min_vend=costEnergy-costEnergy*0.5;
-C_act = 0;
+    costEnergy=spline(1:60:1440,costi,1:1440)./1000;
+    costi_kw_min_vend=costEnergy-costEnergy*0.5;
+    C_act = 0;
     Enel = 0;
     Conta_carica = 0;
     C_act_count = zeros(1440,365);
     recharge_cycle=0;
     counter_charger=0;
+    battery_percentage=[];
+    battery_percentage_daily=[];
    
     for d=1:365
         %%Calculate daily energy produced
@@ -67,8 +69,10 @@ C_act = 0;
                     end
                 end
             end
+            battery_percentage(h)=C_act/C_tot_kw*100;
             C_act_count(h,d) = C_act;      
         end
+        battery_percentage_daily=[battery_percentage_daily battery_percentage];
         if flag == 1 %count the days of full battery charge
             Conta_carica = Conta_carica + 1;
         end

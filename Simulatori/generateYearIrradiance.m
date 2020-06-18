@@ -1,4 +1,4 @@
-function irradianceYearSimulation = generateYearIrradiance 
+function [irradianceYearSimulation,year] = generateYearIrradiance 
     load ./IrradianceData/yearIrradiance.mat
     
     totalmatrix=monthsCloudyOcc;
