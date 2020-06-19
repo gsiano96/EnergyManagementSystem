@@ -37,26 +37,22 @@ time_minutes=(start_time:minutes(1):end_time)';
 time_hours=(start_time:minutes(60):end_time)';
 time_hours.Format='HH:mm';
 
-%% - Irradianze nei mesi per 24 ore -
-% Prima pagina della matrice (caso soleggiato)
+%% - Irradianze giornaliere per mesi e casi -
 
 irradianzeMax=[IrradianzaAprile.Gcs IrradianzaAgosto.Gcs IrradianzaOttobre.Gcs IrradianzaDicembre.Gcs];
 irradianzeMed=[IrradianzaAprile.G IrradianzaAgosto.G IrradianzaOttobre.G IrradianzaDicembre.G];
 
 for j=1:1:4
+    % Prima pagina della matrice (caso soleggiato)
     G_k(:,j,1)=irradianzeMax(:,j);
-end
-for j=1:1:4
+    % Seconda pagina della matrice (caso medio)
     G_k(:,j,2)=irradianzeMed(:,j);
+    % Terza pagina della matrice (caso nuvoloso)
+    G_k(:,j,3)=G_k(:,j,1)*(1-0.80); % Caso peggiore => -80%
 end
 
 % Aggiunto ulteriore campione per ora 24 su tutte le pagine
 %G_k(25,:,:)=0;
-
-%% - Caso nuvoloso (caso peggiore) -
-for i=1:1:4 % per ciascun mese
-    G_k(:,i,3)=G_k(:,i,1)*(1-0.80); % Caso peggiore => -80%
-end
 
 %% - Interpolazione fino a 1440 punti valore su ogni colonna di ogni pagina -
 G_k=abs(interp1(time_hours,G_k,time_minutes,'spline'));
@@ -65,10 +61,11 @@ G_k=abs(interp1(time_hours,G_k,time_minutes,'spline'));
 
 temperatureMed=[IrradianzaAprile.T IrradianzaAgosto.T IrradianzaOttobre.T IrradianzaDicembre.T];
 
+%Mesi x Casi
 variazione_percentuale=[
     40 0 -40;
     20 0 -20;
-    40 0 -40
+    40 0 -40;
     20 0 -20];
 
 for j=1:1:4
@@ -155,42 +152,24 @@ title 'Dicembre'
 
 %% Grafici (2)
 figure(2)
-
-subplot(2,2,1)
-plot(time_minutes,Ppv_k(:,1,2)/1000)
+subplot(1,2,1)
+plot(time_minutes,Ppv_k(:,2,1)/1000);
 hold on
-for k=1:1:3
-    plot(time_minutes,Ppv_k_scaled(:,1,k)/1000)
-    hold on
-end
-legend('STC','giornata calda', 'giornata media', 'giornata fresca')
+plot(time_minutes,Ppv_k_scaled(:,2,1)/1000);
+title('Agosto')
+legend('soleggiato-STC','soleggiato')
 xlabel 'time'
-ylabel 'Ppv(k) [Kw]'
-title 'Aprile'
+ylabel 'Ppv(k)'
 
-subplot(2,2,2)
-plot(time_minutes,Ppv_k(:,2,2)/1000)
+subplot(1,2,2)
+plot(time_minutes,Ppv_k(:,3,1)/1000);
 hold on
-plot(time_minutes,Ppv_k_scaled(:,2)/1000)
-legend('STC','scalato')
+plot(time_minutes,Ppv_k_scaled(:,3,1)/1000);
+title('Ottobre')
+legend('soleggiato-STC','soleggiato')
 xlabel 'time'
-ylabel 'Ppv(k) [Kw]'
-title 'Agosto'
+ylabel 'Ppv(k)'
 
-subplot(2,2,3)
-plot(time_minutes,Ppv_k(:,3,2)/1000)
-hold on
-plot(time_minutes,Ppv_k_scaled(:,3)/1000)
-legend('STC','scalato')
-xlabel 'time'
-ylabel 'Ppv(k) [Kw]'
-title 'Ottobre'
-
-subplot(2,2,4)
-plot(time_minutes,Ppv_k(:,4,2)/1000)
-hold on
-plot(time_minutes,Ppv_k_scaled(:,4)/1000)
-legend('STC','scalato')
-xlabel 'time'
-ylabel 'Ppv(k) [Kw]'
-title 'Dicembre'
+% I mesi Aprile, Ottobre e Dicembre 
+% non risentono dell'effetto di scalatura della potenza dovuto
+% alla temperatura, essendo questa al di sotto di 25°C

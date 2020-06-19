@@ -49,9 +49,8 @@ classdef PhotovoltaicField
                             factor_k(i,j,k)=1-obj.panelPowerTemperatureCoefficient*(temperatureDegree_k(i,j,k)-25);
                         else
                             factor_k(i,j,k)=1;
-                            
+                        end   
                         Ppv_k(i,j,k)=Pmpp_k(i,j,k)*factor_k(i,j,k);
-                        end
                     end
                 end
             end
