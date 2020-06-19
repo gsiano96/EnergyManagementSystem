@@ -28,6 +28,15 @@ time=time(:,4); %extract hours as integers
 % Aggiunta ora 24
 time(25)=24;
 
+start_time = datetime( '00:00', 'InputFormat', 'HH:mm' );
+start_time.Format = 'HH:mm';
+end_time = datetime( '23:59', 'InputFormat', 'HH:mm' );
+end_time.Format = 'HH:mm';
+
+time_minutes=(start_time:minutes(1):end_time)';
+time_hours=(start_time:minutes(60):end_time)';
+time_hours.Format='HH:mm';
+
 %% - Irradianze nei mesi per 24 ore -
 % Prima pagina della matrice
 G_k(:,1,1)=abs(IrradianzaAprile.G);
@@ -66,4 +75,13 @@ parallelsPanelsNumber=1;
 PvField=PhotovoltaicField(Npannelli,Pnom,Vpanel_mpp,panelPowerTemperatureCoefficient,...
     panelVoltageTemperatureCoefficient,seriesPanelsNumber,parallelsPanelsNumber);
 Ppv_k=getMaxOutputPowerSTC(PvField,G_k);
-%Ppv_k=rescaleMPPByTemperature(PvField,Ppv_k,T_k); working in progress!
+
+% for j=1:1:4
+%     for k=1:1:3
+%         Ppv_k(:,j,k)=rescaleMPPByTemperature(PvField,Ppv_k(:,j,k),T_k(:,j));
+%     end
+% end
+
+T_k=interp1(time_hours,T_k,time_minutes,'linear');
+
+plot(time_minutes,T_k(:,4));

@@ -186,7 +186,7 @@ efficiency_k=SolarmaxInverter.efficiency/100;
 
 % Aggiunto lo 0 per uniformare l'asse
 Prel_k=[0;Prel_k];
-efficiency_k=[0.50;efficiency_k];
+efficiency_k=[0;efficiency_k];
 
 % Prel_k = Pinput/Pinput_max con Pinput=Ppv
 % Efficiency è data dalla formula dell'euro-efficienza
