@@ -41,9 +41,20 @@ classdef PhotovoltaicField
         
         function Ppv_k=rescaleMPPByTemperature(obj,Pmpp_k,temperatureDegree_k)
             % Don't scale if the temperature is 25°C
-            temperatureDegree_k(find(temperatureDegree_k == 25))=0;
-            factor_k=1-obj.panelPowerTemperatureCoefficient*temperatureDegree_k;
-            Ppv_k=Pmpp_k.*factor_k;
+            %temperatureDegree_k(find(temperatureDegree_k == 25))=0;
+            for i=1:1:length(temperatureDegree_k)
+                for j=1:1:4
+                    for k=1:1:3
+                        if(temperatureDegree_k(i,j,k) >= 25)
+                            factor_k(i,j,k)=1-obj.panelPowerTemperatureCoefficient*(temperatureDegree_k(i,j,k)-25);
+                        else
+                            factor_k(i,j,k)=1;
+                            
+                        Ppv_k(i,j,k)=Pmpp_k(i,j,k)*factor_k(i,j,k);
+                        end
+                    end
+                end
+            end
         end
     end
 end
