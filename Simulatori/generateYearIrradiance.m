@@ -25,7 +25,7 @@ function [irradianceYearSimulation,year] = generateYearIrradiance
             j=j+1;
         end
     end
-    figure(20)
+    figure(2)
     stem([year(:,1);year(1:28,2);year(:,3);year(1:30,4);year(:,5);year(1:30,6);year(:,7);year(:,8);year(1:30,9);year(:,10);year(1:30,11);year(:,12)])
     xlim([1,365])
 end

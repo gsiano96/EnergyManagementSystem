@@ -9,9 +9,13 @@ costEnergy=spline(1:60:1440,costi,1:1440)./1000;
     for d=1:365
         moneySpent=0;
         for h=1:1440
-            moneySpentDay = Eload_k_kwh*costEnergy(h);
+            if h > 1
+                Eload_act = Eload_k_kwh(h)-Eload_k_kwh(h-1);
+            else
+                Eload_act = Eload_k_kwh(h);
+            end
+            moneySpent = moneySpent + Eload_act*costEnergy(h);
         end
+        moneySpentDay(d) = moneySpent;
     end
-    moneySpentDay(d) = moneySpent;
-    
 end
