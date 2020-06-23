@@ -44,23 +44,27 @@ V_mpp_pnl = 54.7; %[V]
 I_mpp_pnl = 5.98; %[A]
 V_oc_pnl = 64.9; %[V]
 I_cc_pnl = 6.46; %[A]
+Panel_cost = 300; %[€]
 
 %Photovoltaic field characteristics
 N_tot_pnl = 400
 P_nom_field = N_tot_pnl * P_nom_pnl; %[W] - Condizioni STC(1000W/m^2 - 25°)
-
+Cost_PV = N_tot_pnl * Panel_cost; %[€]
 
 %% - Battery Characteristics -
 %{
 %Modules characteristics - %"sonnen eco 9.43 - LiFePo4"
+%Prezzi Iva Esclusa (Sterlina-Euro 1:1)
+%Modulo base (2.5) con inverter -> €3000
+%Moduli aggiuntivi (2.5) -> €1000/pz. (5pz. -> €5000) 
 n_mod = 14;
-C_mod = 15000;    % [Wh]
+C_mod = 15000; % [Wh]
 C_tot = C_mod*n_mod; % [Wh]
 C_tot_kw = C_tot/1000; % [kWh]
 
 %Battery lifecycle characteristics
 cycles = 10000;
-cost_mod = 3500*6; % [€]
+cost_mod = 8000; % [€]
 cost_tot = cost_mod * n_mod; % [€]
 cost_cycle = cost_tot/cycles;
 %}
@@ -76,16 +80,19 @@ cost_mod=1600;
 cost_tot=cost_mod*n_mod;
 cost_cycle = cost_tot/cycles;
 %}
+
+
 % Ma proprio veramente cvhe più pezzotta non si può
 %https://www.alibaba.com/product-detail/Extra-long-5000-Cycle-Times-Rechargeable_1349859896.html?spm=a2700.7735675.normalList.1.4c4f4c67hWiKk4
 n_mod = 175;
 C_mod=210/n_mod;
 C_tot_kw=C_mod*n_mod;
 
-cycles = 5000;
+cycles = 4000; %(DoD = 0.8)
 cost_mod=221.85;
 cost_tot=cost_mod*n_mod;
 cost_cycle = cost_tot/cycles;
+
 
 %% - Generate Casual Year - 
 [irradianceYearSimulation,year] = generateYearIrradiance;
@@ -97,7 +104,7 @@ P_day = (P_nom_field/1000)*irradianceYearSimulation(:,240); %[W]
 P_k_day = spline(1:60:1440, P_day, 1:1440); %[W]
 P_k_day_kw = P_k_day/1000; %[kW]
 
-figure(2)
+figure(20)
         plot(time_minutes, P_k_day_kw)
         xlabel('Ore del giorno')
         ylabel('Potenza (kW)')
@@ -141,7 +148,7 @@ Eload_fix=cumtrapz(0.0167,Pload_k); %Energy consumed at each step of 0.0167 hour
 Eload_fix_kwh=Eload_fix/1000; %[kWh]
 
 %Strategy "No Panel"
-moneySpentYear_no_panel = strategy_no_panel(Eload_k_kwh, costi);
+moneySpentYear_no_panel = strategy_no_panel(Eload_k_kwh, costi, irradianceYearSimulation);
 
 %Strategy "Only Panel"
 [wastedKwDay_only_panel, moneySpentDay_only_panel,moneyEarnedDay_only_panel] = strategy_only_panel(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi);
@@ -150,10 +157,10 @@ moneySpentYear_no_panel = strategy_no_panel(Eload_k_kwh, costi);
 [wastedKwDay_no_cost,moneySpentDay_no_cost,moneyEarnedDay_no_cost, recharge_no_cost,battery_daily_no_cost] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw);
 
 %Strategy "DoD"
-[wastedKwDay_DoD,moneySpentDay_DoD,moneyEarnedDay_DoD, recharge_cycle_DoD,battery_daily_DoD] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw, cost_cycle, Eload_fix_kwh,0.9);
+[wastedKwDay_DoD,moneySpentDay_DoD,moneyEarnedDay_DoD, recharge_cycle_DoD,battery_daily_DoD] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw, cost_cycle, Eload_fix_kwh,0.8);
 
 %Strategy "Night Buy"
-[wastedKwDay_night_buy,moneySpentDay_night_buy,moneyEarnedDay_night_buy,recharge_cycle_night_buy,battery_daily_night_buy] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,0.5,0.9);
+[wastedKwDay_night_buy,moneySpentDay_night_buy,moneyEarnedDay_night_buy,recharge_cycle_night_buy,battery_daily_night_buy] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,0.5,0.8);
 
 %% - Plot "No Panel" Strategy -
 figure(3)
@@ -338,7 +345,7 @@ figure(10)
         ylabel("%")
     sgtitle("Night Buy Strategy");
 
-%% - Plot Cost Comparation Strategies -    
+%% - Plot Cost Comparison Strategies -    
 no=sum(moneySpentDay_no_cost);
 dod=sum(moneySpentDay_DoD);
 nopan=sum(moneySpentYear_no_panel);
@@ -346,38 +353,47 @@ notte=sum(moneySpentDay_night_buy);
 panne= sum(moneySpentDay_only_panel);
 figure(11)
     subplot(311)
-        stem(nopan, 'm')
-        hold on
-        stem([0,panne],'y')
-        stem([0,0,no],'g')
-        stem([0,0,0,dod],'b')
-        stem([0,0,0,0,notte],'r')
+        b = bar([nopan,panne,no,dod,notte])
+            b.FaceColor = 'flat';
+            b.CData(1,:)=[1 0 1];
+            b.CData(2,:)=[1 1 0];
+            b.CData(3,:)=[0 1 0];
+            b.CData(4,:)=[0 0 1];
+            b.CData(5,:)=[1 0 0];
         xlim([0,6])
         title("Money spent");
-        legend('No Panel','Only Panel','No Cost','DoD','Night Buy')
-    subplot(312)
-        stem(0,'m')
         hold on
-        stem([0,sum(moneyEarnedDay_only_panel)],'y')
-        stem([0,0,sum(moneyEarnedDay_no_cost)],'g')
-        stem([0,0,0,sum(moneyEarnedDay_DoD)],'b')
-        stem([0,0,0,0,sum(moneyEarnedDay_night_buy)],'r')
+        colors=[[1 0 1];[1 1 0];[0 1 0];[0 0 1];[1 0 0]];                                   
+        nColors=size(colors,1);                             
+        labels={'No Panel';'Only Panel';'No Cost';'DoD';'Night Buy'};
+        hBLG = bar(nan(2,nColors));         % the bar object array for legend
+        for i=1:nColors
+        hBLG(i).FaceColor=colors(i,:);
+        end
+        hLG=legend(hBLG,labels,'location','northeast');
+    subplot(312)
+        b = bar([0,sum(moneyEarnedDay_only_panel),sum(moneyEarnedDay_no_cost),sum(moneyEarnedDay_DoD),sum(moneyEarnedDay_night_buy)])
+            b.FaceColor = 'flat';
+            b.CData(1,:)=[1 0 1]; %magenta
+            b.CData(2,:)=[1 1 0]; %yellow
+            b.CData(3,:)=[0 1 0]; %green
+            b.CData(4,:)=[0 0 1]; %blue
+            b.CData(5,:)=[1 0 0]; %red
         xlim([0,6])
         title("Money earned");
-        legend('No Panel','Only Panel','No Cost','DoD','Night Buy')
     subplot(313)
-        stem(0-nopan, 'm')
-        hold on
-        stem([0,sum(moneyEarnedDay_only_panel)-panne],'y')
-        stem([0,0,sum(moneyEarnedDay_no_cost)-no],'g')
-        stem([0,0,0,sum(moneyEarnedDay_DoD)-dod],'b')
-        stem([0,0,0,0,sum(moneyEarnedDay_night_buy)-notte],'r')
+        b = bar([0-nopan,sum(moneyEarnedDay_only_panel)-panne,sum(moneyEarnedDay_no_cost)-no,sum(moneyEarnedDay_DoD)-dod,sum(moneyEarnedDay_night_buy)-notte])
+            b.FaceColor = 'flat';
+            b.CData(1,:)=[1 0 1]; %magenta
+            b.CData(2,:)=[1 1 0]; %yellow
+            b.CData(3,:)=[0 1 0]; %green
+            b.CData(4,:)=[0 0 1]; %blue
+            b.CData(5,:)=[1 0 0]; %red
         xlim([0,6])
         title("Difference")
-        legend('No Panel','Only Panel','No Cost','DoD','Night Buy')
     sgtitle("Cost Comparation Strategies")
         
-%% - Plot kWh Wasted Comparation Strategies -
+%% - Plot kWh Wasted Comparison Strategies -
 figure(12)
     plot(wastedKwDay_only_panel,'y')
     hold on
@@ -389,7 +405,7 @@ figure(12)
     xlim([1,365])
     legend ( 'OnlyPanel Strategy','NoCost Strategy', 'DoD Strategy', 'NightBuy Strategy')
 
-%% - Plot Battery Percentage Daily (at Hour) Comparation Strategies -
+%% - Plot Battery Percentage Daily (at Hour) Comparison Strategies -
 figure(13)
     subplot(331)
         plot(battery_daily_no_cost(1:60*24:end))
@@ -428,7 +444,238 @@ figure(13)
         title("Battery Percentage Daily - Night Buy (18:00)");
         xlim([1,365])
     sgtitle("Battery Percentage Daily (00 - 12 - 18) Comparation Strategies")
-%% - Influenza della temperatura- 
+
+%% - DoD Strategy -> downsizing for DoD - 
+%Change Battery Lifecycle Parameters
+cycles_1 = 7200;
+cost_mod_1=221.85;
+cost_tot_1=cost_mod_1*n_mod;
+cost_cycle_1 = cost_tot_1/cycles_1;
+
+plotHealtBattery(14,5000,'ChineseBattery')
+%Change DoD
+[wastedKwDay_DoD_1,moneySpentDay_DoD_1,moneyEarnedDay_DoD_1,recharge_cycle_DoD_1,battery_daily_DoD_1] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw, cost_cycle_1, Eload_fix_kwh,0.6);
+
+figure(15)
+    subplot(221)
+        plot(wastedKwDay_DoD_1)
+        title("Daily Wasted kWh");
+        xlim([1,365])
+        xlabel("Days")
+        ylabel("kWh")
+    subplot(222)
+        plot(moneySpentDay_DoD_1)
+        title("Money spent Daily");
+        xlim([1,365])
+        xlabel("Days")
+        ylabel("€")
+    subplot(223)
+        plot(moneyEarnedDay_DoD_1)
+        title("Money earned Daily");
+        xlim([1,365])
+        xlabel("Days")
+        ylabel("€")
+    subplot(224)
+        stem(moneyEarnedDay_DoD_1-moneySpentDay_DoD_1)
+        title("Difference 'earned-spent' Daily (€)");
+        xlim([1,365])
+        xlabel("Days")
+        ylabel("€")
+    sgtitle("DoD Strategy (DoD = 0.6)");
+
+figure(16)
+    subplot(311)
+        plot(battery_daily_DoD_1(1:60*24:end))
+        title("Battery Percentage Daily (00:00)");
+        xlim([1,365])
+        xlabel("Days")
+        ylabel("%")
+    subplot(312)
+        plot(battery_daily_DoD_1(12*60:60*24:end))
+        title("Battery Percentage Daily (12:00)");
+        xlim([1,365])
+        xlabel("Days")
+        ylabel("%")
+    subplot(313)
+        plot(battery_daily_DoD_1(18*60:60*24:end))
+        title("Battery Percentage Daily (18:00)");
+        xlim([1,365])
+        xlabel("Days")
+        ylabel("%")
+    sgtitle("DoD Strategy (DoD = 0.6)");
+%% - Night Buy Strategy -> variations -
+%Increase % of recharge during the night
+[wastedKwDay_night_buy_1,moneySpentDay_night_buy_1,moneyEarnedDay_night_buy_1,recharge_cycle_night_buy_1,battery_daily_night_buy_1] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,0.7,0.9);
+
+figure(17)
+    subplot(221)
+        plot(wastedKwDay_night_buy_1)
+        title("Daily Wasted kWh");
+        xlim([1,365])
+        xlabel("Days")
+        ylabel("kWh")
+    subplot(222)
+        plot(moneySpentDay_night_buy_1)
+        title("Money spent Daily");
+        xlim([1,365])
+        xlabel("Days")
+        ylabel("€")
+    subplot(223)
+        plot(moneyEarnedDay_night_buy_1)
+        title("Money earned Daily");
+        xlim([1,365])
+        xlabel("Days")
+        ylabel("€")
+    subplot(224)
+        stem(moneyEarnedDay_night_buy_1-moneySpentDay_night_buy_1)
+        title("Difference 'earned-spent' Daily (€)");
+        xlim([1,365])
+        xlabel("Days")
+        ylabel("€")
+    sgtitle("Night Buy Strategy (% Recharge = 0.7)");
+
+figure(18)
+    subplot(311)
+        plot(battery_daily_night_buy_1(1:60*24:end))
+        title("Battery Percentage Daily (00:00)");
+        xlim([1,365])
+        xlabel("Days")
+        ylabel("%")
+    subplot(312)
+        plot(battery_daily_night_buy_1(12*60:60*24:end))
+        title("Battery Percentage Daily (12:00)");
+        xlim([1,365])
+        xlabel("Days")
+        ylabel("%")
+    subplot(313)
+        plot(battery_daily_night_buy_1(18*60:60*24:end))
+        title("Battery Percentage Daily (18:00)");
+        xlim([1,365])
+        xlabel("Days")
+        ylabel("%")
+    sgtitle("Night Buy Strategy (% Recharge = 0.7)");
+    
+%Increase % of recharge during the night (?)
+
+%% - Plot Battery Recharge Cycles Comparison Strategies -
+figure(19)
+    b = bar([recharge_no_cost,recharge_cycle_DoD,recharge_cycle_night_buy])
+        b.FaceColor = 'flat';
+        b.CData(1,:)=[0 1 0]; %green
+        b.CData(2,:)=[0 0 1]; %blue
+        b.CData(3,:)=[1 0 0]; %red
+    xlim([0,4])
+    title("Battery Recharge Cycles");
+    hold on
+    colors=[[0 1 0];[0 0 1];[1 0 0]];                                   
+    nColors=size(colors,1);                             
+    labels={'No Cost';'DoD';'Night Buy'};
+    hBLG = bar(nan(2,nColors));         % the bar object array for legend
+    for i=1:nColors
+      hBLG(i).FaceColor=colors(i,:);
+    end
+    hLG=legend(hBLG,labels,'location','northeast');
+%% - Generate a 10 year simulation - 
+for i=0:20
+    [decadeIrr(1:24,1+i*365:365+i*365),decadeYear(1:31,1+i*12:12+i*12)] = generateYearIrradiance;
+end
+
+%Strategy "No Panel"
+moneySpentYear_no_panel_dec = strategy_no_panel(Eload_k_kwh, costi, decadeIrr);
+
+%Strategy "Only Panel"
+[wastedKwDay_only_panel_dec, moneySpentDay_only_panel_dec,moneyEarnedDay_only_panel_dec] = strategy_only_panel(P_nom_field,decadeIrr,Eload_k_kwh, costi);
+
+%Strategy "No Cost"
+[wastedKwDay_no_cost_dec,moneySpentDay_no_cost_dec,moneyEarnedDay_no_cost_dec, recharge_no_cost_dec,battery_daily_no_cost_dec] = strategy_no_cost(P_nom_field,decadeIrr,Eload_k_kwh, costi, C_tot_kw);
+
+%Strategy "DoD"
+[wastedKwDay_DoD_dec,moneySpentDay_DoD_dec,moneyEarnedDay_DoD_dec, recharge_cycle_DoD_dec,battery_daily_DoD_dec] = strategy_with_DoD(P_nom_field,decadeIrr,Eload_k_kwh, costi, C_tot_kw, cost_cycle, Eload_fix_kwh,0.8);
+
+%Strategy "Night Buy"
+[wastedKwDay_night_buy_dec,moneySpentDay_night_buy_dec,moneyEarnedDay_night_buy_dec,recharge_cycle_night_buy_dec,battery_daily_night_buy_dec] = strategy_with_night_buy(P_nom_field,decadeIrr,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,0.5,0.8);
+
+%Costs
+no_dec=sum(moneySpentDay_no_cost_dec);
+dod_dec=sum(moneySpentDay_DoD_dec);
+nopan_dec=sum(moneySpentYear_no_panel_dec);
+notte_dec=sum(moneySpentDay_night_buy_dec);
+panne_dec= sum(moneySpentDay_only_panel_dec);
+figure(20)
+    subplot(311)
+        b = bar([nopan_dec,panne_dec,no_dec,dod_dec,notte_dec])
+            b.FaceColor = 'flat';
+            b.CData(1,:)=[1 0 1];
+            b.CData(2,:)=[1 1 0];
+            b.CData(3,:)=[0 1 0];
+            b.CData(4,:)=[0 0 1];
+            b.CData(5,:)=[1 0 0];
+        xlim([0,6])
+        title("Money spent");
+        hold on
+        colors=[[1 0 1];[1 1 0];[0 1 0];[0 0 1];[1 0 0]];                                   
+        nColors=size(colors,1);                             
+        labels={'No Panel';'Only Panel';'No Cost';'DoD';'Night Buy'};
+        hBLG = bar(nan(2,nColors));         % the bar object array for legend
+        for i=1:nColors
+            hBLG(i).FaceColor=colors(i,:);
+        end
+        hLG=legend(hBLG,labels,'location','northeast');
+    subplot(312)
+        b = bar([0,sum(moneyEarnedDay_only_panel_dec),sum(moneyEarnedDay_no_cost_dec),sum(moneyEarnedDay_DoD_dec),sum(moneyEarnedDay_night_buy_dec)])
+            b.FaceColor = 'flat';
+            b.CData(1,:)=[1 0 1]; %magenta
+            b.CData(2,:)=[1 1 0]; %yellow
+            b.CData(3,:)=[0 1 0]; %green
+            b.CData(4,:)=[0 0 1]; %blue
+            b.CData(5,:)=[1 0 0]; %red
+        xlim([0,6])
+        title("Money earned");
+    subplot(313)
+        b = bar([0-nopan_dec,sum(moneyEarnedDay_only_panel_dec)-panne_dec,sum(moneyEarnedDay_no_cost_dec)-no_dec,sum(moneyEarnedDay_DoD_dec)-dod_dec,sum(moneyEarnedDay_night_buy_dec)-notte_dec])
+            b.FaceColor = 'flat';
+            b.CData(1,:)=[1 0 1]; %magenta
+            b.CData(2,:)=[1 1 0]; %yellow
+            b.CData(3,:)=[0 1 0]; %green
+            b.CData(4,:)=[0 0 1]; %blue
+            b.CData(5,:)=[1 0 0]; %red
+        xlim([0,6])
+        title("Difference")
+    sgtitle("Cost Comparation Strategies")
+
+%Battery Cycles 10 year
+figure(21)
+    b = bar([recharge_no_cost_dec,recharge_cycle_DoD_dec,recharge_cycle_night_buy_dec])
+        b.FaceColor = 'flat';
+        b.CData(1,:)=[0 1 0]; %green
+        b.CData(2,:)=[0 0 1]; %blue
+        b.CData(3,:)=[1 0 0]; %red
+    xlim([0,4])
+    title("Battery Recharge Cycles");
+    hold on
+    colors=[[0 1 0];[0 0 1];[1 0 0]];                                   
+    nColors=size(colors,1);                             
+    labels={'No Cost';'DoD';'Night Buy'};
+    hBLG = bar(nan(2,nColors));         % the bar object array for legend
+    for i=1:nColors
+      hBLG(i).FaceColor=colors(i,:);
+    end
+    hLG=legend(hBLG,labels,'location','northeast');
+
+%Total cost
+plant_cost = Cost_PV + cost_tot + 14000;
+figure(22)
+    b = bar([0-nopan_dec,sum(moneyEarnedDay_only_panel_dec)-panne_dec-Cost_PV,sum(moneyEarnedDay_no_cost_dec)-no_dec-plant_cost,sum(moneyEarnedDay_DoD_dec)-dod_dec-plant_cost,sum(moneyEarnedDay_night_buy_dec)-notte_dec-plant_cost])
+        b.FaceColor = 'flat';
+        b.CData(1,:)=[1 0 1]; %magenta
+        b.CData(2,:)=[1 1 0]; %yellow
+        b.CData(3,:)=[0 1 0]; %green
+        b.CData(4,:)=[0 0 1]; %blue
+        b.CData(5,:)=[1 0 0]; %red
+    xlim([0,6])
+    title("Total Cost Comparation Strategies")
+
+%% - Influenza della temperatura - 
 NOCT = 45; %[°C]
 alfa = -0.0035;
 Tstc = 25; %[°C]
@@ -484,7 +731,7 @@ P_temp_apr_2 = P_day_apr(:,2).*(1+alfa*(T_apr_2-Tstc));
 P_temp_apr_3 = P_day_apr(:,3).*(1+alfa*(T_apr_3-Tstc));
 P_temp_apr_4 = P_day_apr(:,4).*(1+alfa*(T_apr_4-Tstc));
 
-figure(14)
+figure(23)
     subplot(421)
         plot(P_day_ago(:,1))
         hold on
@@ -535,7 +782,7 @@ figure(14)
         title("Dicembre - Giorno Tipo 4");
         ylabel("kW")
     sgtitle("Confronto potenza influenza Temperature Dicembre - Agosto")
-figure(15)
+figure(24)
     subplot(421)
         plot(P_day_apr(:,1))
         hold on

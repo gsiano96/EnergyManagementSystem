@@ -22,8 +22,8 @@ function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle, battery_perce
     counter_charger=0;
     battery_percentage=[];
     battery_percentage_daily=[];
-   
-    for d=1:365
+    x = length(irradianceYearSimulation);
+    for d=1:x
         %%Calculate daily energy produced
         P_day = (P_nom_field/1000)*irradianceYearSimulation(:,d); %[W]
         P_d_min = spline(1:60:1440, P_day, 1:1440); %[W]

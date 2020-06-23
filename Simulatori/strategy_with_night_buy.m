@@ -24,7 +24,8 @@ function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle,battery_percen
     battery_percentage_daily=[];
     recharge_cycle=0;
     counter_charger=0;
-    for d=1:365
+    x = length(irradianceYearSimulation);
+    for d=1:x
         %%Calculate daily energy produced
         P_day = (P_nom_field/1000)*irradianceYearSimulation(:,d); %[W]
         P_d_min = spline(1:60:1440, P_day, 1:1440); %[W]
@@ -48,19 +49,17 @@ function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle,battery_percen
                 diff = Eload_fix_act - Epv_d_act; %obtain the difference between the energies
                 if costEnergy(h)>cost_kw_battery
                     if (C_act-diff > C_tot_kw*(1-DoD))
-                       
-                        if (h>6*60) && (h<23*60) %verify if the battery can satisfy the plus request of the load
+                       if (h>6*60) && (h<23*60) %verify if the battery can satisfy the plus request of the load
                             C_act = C_act-diff;
-                            
                         else
                             Enel = Enel + diff;%take difference from the vendor
-                            Enel_eur = Enel_eur + costEnergy(h)*diff;
+                            %Enel_eur = Enel_eur + costEnergy(h)*diff;
                             moneySpent = moneySpent + diff*costEnergy(h);
                         end
                     end
                 else
                     Enel = Enel + diff;%take difference from the vendor
-                    Enel_eur = Enel_eur + costEnergy(h)*diff;
+                    %Enel_eur = Enel_eur + costEnergy(h)*diff;
                     moneySpent = moneySpent + diff*costEnergy(h);
                 end
             else
@@ -86,11 +85,10 @@ function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle,battery_percen
             if (h<6*60) || (h>23*60)
                 if(battery_percentage(h)/100<max_charge)
                     Enel=max_charge*C_tot_kw-C_act;
-                    Enel_eur = Enel_eur + costEnergy(h)*(max_charge-C_act);
-                    counter_charger=counter_charger + (max_charge-C_act)/C_tot_kw;
+                    %Enel_eur = Enel_eur + costEnergy(h)*(max_charge-C_act);
+                    moneySpent = moneySpent + costEnergy(h)*Enel;
+                    counter_charger = counter_charger + Enel/C_tot_kw;
                     C_act=max_charge*C_tot_kw;
-                    
-                    
                 end
             end
         end

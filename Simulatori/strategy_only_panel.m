@@ -10,15 +10,15 @@
     quella stessa ora.
 %}
 function [ wastedKwDay, moneySpentDay,moneyEarnedDay] = strategy_only_panel(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi)
-costEnergy=spline(1:60:1440,costi,1:1440)./1000;
-costi_kw_min_vend=costEnergy-costEnergy*0.5;
-moneySpentDay=[];
-moneyEarnedDay=[];
-wastedKwDay = [];
+    costEnergy=spline(1:60:1440,costi,1:1440)./1000;
+    costi_kw_min_vend=costEnergy-costEnergy*0.5;
+    moneySpentDay=[];
+    moneyEarnedDay=[];
+    wastedKwDay = [];
+    Enel=0;
+    x = length(irradianceYearSimulation);
 
-Enel=0;
-
-    for d=1:365
+    for d=1:x
         
         P_day = (P_nom_field/1000)*irradianceYearSimulation(:,d); %[W]
         P_d_min = spline(1:60:1440, P_day, 1:1440); %[W]
@@ -29,8 +29,6 @@ Enel=0;
         profit=0;
         moneySpent=0;
         kw_butt=0;
-        
-        
         
         for h=1:1440
             
