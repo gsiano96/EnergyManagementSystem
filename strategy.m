@@ -86,11 +86,18 @@ panelPowerTemperatureCoefficient=0.35/100; %/°C
 panelVoltageTemperatureCoefficient=176.6/1000; %V/°C
 seriesPanelsNumber=400;
 parallelsPanelsNumber=1;
+
 PvField=PhotovoltaicField(Npannelli,Pnom,Vpanel_mpp,panelPowerTemperatureCoefficient,...
     panelVoltageTemperatureCoefficient,seriesPanelsNumber,parallelsPanelsNumber);
 Ppv_k=getMaxOutputPowerSTC(PvField,G_k);
 
 Ppv_k_scaled=rescaleMPPByTemperature(PvField,Ppv_k,T_k);
+
+margin_k=ones(1440,1)*10*1000;
+optimizePanelsNumber(PvField,Ppv_k,10*1000,margin_k);
+
+%% - Inverter Fotovoltaico (Solarmax) -
+
 
 %% - Carico -
 Pload_k=vector(:,2)*1000; %W 
