@@ -9,7 +9,7 @@
     percentuale ogni notte (se la stessa ha una carica inferiore) mentre di
     giorno segue la normale impostazione delle altre strategie. 
 %}
-function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle,battery_percentage_daily] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,max_charge,DoD)    
+function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle,battery_percentage_daily] = strategy_with_night_buy(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,max_charge,DoD,Inverter_threshold)    
     
     cost_kw_battery = cost_cycle/(C_tot_kw*DoD);
     costEnergy=spline(1:60:1440,costi,1:1440)./1000;
@@ -45,6 +45,12 @@ function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle,battery_percen
                 Epv_d_act = Epv_d_kwh(h);
                 Eload_fix_act = Eload_fix_kwh(h);
             end
+            %--- Inverter Section -----
+            if Epv_d_act > Inverter_threshold
+                Epv_d_act = Inverter_threshold;
+            end
+            Epv_d_act = Epv_d_act*0.95;
+            %--------------------------
             if Epv_d_act < Eload_fix_act %verify if the actual energy produced by the PV is less then the energy request of the load
                 diff = Eload_fix_act - Epv_d_act; %obtain the difference between the energies
                 if costEnergy(h)>cost_kw_battery

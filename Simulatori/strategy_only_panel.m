@@ -9,7 +9,7 @@
     viene rivenduta al gestore elettrico a metà del prezzo d'acquisto in
     quella stessa ora.
 %}
-function [ wastedKwDay, moneySpentDay,moneyEarnedDay] = strategy_only_panel(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi)
+function [ wastedKwDay, moneySpentDay,moneyEarnedDay] = strategy_only_panel(P_nom_field,irradianceYearSimulation,Eload_k_kwh,costi,Inverter_threshold)
     costEnergy=spline(1:60:1440,costi,1:1440)./1000;
     costi_kw_min_vend=costEnergy-costEnergy*0.5;
     moneySpentDay=[];
@@ -23,7 +23,7 @@ function [ wastedKwDay, moneySpentDay,moneyEarnedDay] = strategy_only_panel(P_no
         P_day = (P_nom_field/1000)*irradianceYearSimulation(:,d); %[W]
         P_d_min = spline(1:60:1440, P_day, 1:1440); %[W]
         P_d_min_kw = P_d_min/1000; %[kW]
-        Epv_d=cumtrapz(0.0167,P_d_min); %Energy produced at each step
+        Epv_d=cumtrapz(0.0167,P_d_min); % [Wh] Energy produced at each step
         Epv_d_kwh=Epv_d/1000; %[kWh]
         
         profit=0;
@@ -39,9 +39,15 @@ function [ wastedKwDay, moneySpentDay,moneyEarnedDay] = strategy_only_panel(P_no
                 Epv_d_act = Epv_d_kwh(h);
                 Eload_fix_act = Eload_k_kwh(h);
             end
+            %--- Inverter Section -----
+            if Epv_d_act > Inverter_threshold
+                Epv_d_act = Inverter_threshold;
+            end
+            Epv_d_act = Epv_d_act*0.95;
+            %--------------------------
             if Epv_d_act < Eload_fix_act
                 diff = Eload_fix_act - Epv_d_act;
-                Enel = Enel + diff;
+                Enel = Enel + diff; %kWh bought by electric manager
                 moneySpent = moneySpent + diff*costEnergy(h);
              else
                 plus = Epv_d_act - Eload_fix_act;%if the energy produced by PV is more than the load request

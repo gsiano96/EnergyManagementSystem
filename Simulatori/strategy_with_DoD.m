@@ -12,7 +12,7 @@
     carica allora l'energia verrà acquistata solo dal gestore elettrico. La
     gestione della sovrapproduzione è identica alla strategia "no_cost"
 %}
-function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle,battery_percentage_daily] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,DoD)    
+function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle,battery_percentage_daily] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,cost_cycle, Eload_fix_kwh,DoD,Inverter_threshold)    
     cost_kw_battery = cost_cycle/(C_tot_kw*DoD);
     costEnergy=spline(1:60:1440,costi,1:1440)./1000;
     costi_kw_min_vend=costEnergy-costEnergy*0.5;
@@ -46,6 +46,12 @@ function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle,battery_percen
                 Epv_d_act = Epv_d_kwh(h);
                 Eload_fix_act = Eload_fix_kwh(h);
             end
+            %--- Inverter Section -----
+            if Epv_d_act > Inverter_threshold
+                Epv_d_act = Inverter_threshold;
+            end
+            Epv_d_act = Epv_d_act*0.95;
+            %--------------------------
             if Epv_d_act < Eload_fix_act %verify if the actual energy produced by the PV is less then the energy request of the load
                 diff = Eload_fix_act - Epv_d_act; %obtain the difference between the energies
                 if costEnergy(h)>cost_kw_battery
@@ -53,12 +59,10 @@ function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle,battery_percen
                         C_act = C_act-diff;
                     else
                         Enel = Enel + diff;%take difference from the vendor
-                        Enel_eur = Enel_eur + costEnergy(h)*diff;
                         moneySpent = moneySpent + diff*costEnergy(h);
                     end
                 else
                     Enel = Enel + diff;%take difference from the vendor
-                    Enel_eur = Enel_eur + costEnergy(h)*diff;
                     moneySpent = moneySpent + diff*costEnergy(h);
                 end
             else
@@ -71,10 +75,9 @@ function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle,battery_percen
                         profit = profit + (C_act-C_tot_kw)*costi_kw_min_vend(h);
                         counter_charger=counter_charger-(C_act-C_tot_kw)/C_tot_kw;
                         C_act = C_tot_kw;
-                        
                         flag = 1;
                     end
-                    if(counter_charger>=DoD)
+                    if(counter_charger>=DoD) %verify if the battery takes over the battery percentage of DoD
                         counter_charger=counter_charger-DoD;
                         recharge_cycle=recharge_cycle+1;
                     end

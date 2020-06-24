@@ -10,7 +10,7 @@
     dal campo ed il rimanente dalla batteria se ne dispone, in caso 
     contrario dal gestore elettrico.
 %}
-function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle, battery_percentage_daily] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw)
+function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle, battery_percentage_daily] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,Inverter_threshold)
 
     costEnergy=spline(1:60:1440,costi,1:1440)./1000;
     costi_kw_min_vend=costEnergy-costEnergy*0.5;
@@ -42,6 +42,12 @@ function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle, battery_perce
                 Epv_d_act = Epv_d_kwh(h);
                 Eload_fix_act = Eload_k_kwh(h);
             end
+            %--- Inverter Section -----
+            if Epv_d_act > Inverter_threshold
+                Epv_d_act = Inverter_threshold;
+            end
+            Epv_d_act = Epv_d_act*0.95;
+            %--------------------------
             if Epv_d_act < Eload_fix_act %verify if the actual energy produced by the PV is less then the energy request of the load
                 diff = Eload_fix_act - Epv_d_act; %obtain the difference between the energies
                 if C_act > diff %verify if the battery can satisfy the plus request of the load
@@ -69,8 +75,8 @@ function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle, battery_perce
                     end
                 end
             end
-            battery_percentage(h)=C_act/C_tot_kw*100;
-            C_act_count(h,d) = C_act;      
+            battery_percentage(h)=C_act/C_tot_kw*100; %count the % of battery minute per minute
+            C_act_count(h,d) = C_act; %count the energy stored in the battery minute per minute
         end
         battery_percentage_daily=[battery_percentage_daily battery_percentage];
         if flag == 1 %count the days of full battery charge
