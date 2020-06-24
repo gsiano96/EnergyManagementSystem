@@ -44,7 +44,7 @@ V_mpp_pnl = 54.7; %[V]
 I_mpp_pnl = 5.98; %[A]
 V_oc_pnl = 64.9; %[V]
 I_cc_pnl = 6.46; %[A]
-Panel_cost = 300; %[€]
+Panel_cost = 300*0.45; %[€]
 
 %Photovoltaic field characteristics
 N_tot_pnl = 400
@@ -53,7 +53,7 @@ Cost_PV = N_tot_pnl * Panel_cost; %[€]
 
 %% - Battery Characteristics -
 
-
+%{
 %Modules characteristics - %"sonnen eco 9.43 - LiFePo4"
 %Prezzi Iva Esclusa (Sterlina-Euro 1:1)
 %Modulo base (2.5) con inverter -> €3000
@@ -65,10 +65,10 @@ C_tot_kw = C_tot/1000; % [kWh]
 
 %Battery lifecycle characteristics
 cycles = 10000;
-cost_mod = 8000*0.5; % [€]
+cost_mod = 8000*0.45; % [€]
 cost_tot = cost_mod * n_mod; % [€]
 cost_cycle = cost_tot/cycles;
-
+%}
 %{
 %% Batteria Pezzotta is better (?)
 % citando alessio qua n'z pav!
@@ -81,7 +81,7 @@ cost_mod=1600;
 cost_tot=cost_mod*n_mod;
 cost_cycle = cost_tot/cycles;
 %}
-%{
+
 % Ma proprio veramente cvhe più pezzotta non si può
 %https://www.alibaba.com/product-detail/Extra-long-5000-Cycle-Times-Rechargeable_1349859896.html?spm=a2700.7735675.normalList.1.4c4f4c67hWiKk4
 n_mod = 175;
@@ -89,13 +89,13 @@ C_mod=210/n_mod;
 C_tot_kw=C_mod*n_mod;
 
 cycles = 4000; %(DoD = 0.8)
-cost_mod=221.85*0.5;
+cost_mod=221.85*0.45;
 cost_tot=cost_mod*n_mod;
 cost_cycle = cost_tot/cycles;
-%}
+
 
 %Setting the DoD for the battery
-DoD = 0.9;
+DoD = 0.8;
 %% - Inverter Characteristic - 
 inv_Threshold = 130;
 %% - Generate Casual Year - 
@@ -681,7 +681,7 @@ figure(22)
     title("Total Cost Comparation Strategies Selling")
 
 %Total cost without sell to electric manager
-plant_cost = Cost_PV + cost_tot+1000;
+plant_cost = Cost_PV + cost_tot+4000;
 figure(23)
     b = bar([nopan_dec,panne_dec+Cost_PV,no_dec+plant_cost,dod_dec+plant_cost,notte_dec+plant_cost]);
         b.FaceColor = 'flat';
