@@ -86,22 +86,47 @@ panelPowerTemperatureCoefficient=0.35/100; %/°C
 panelVoltageTemperatureCoefficient=176.6/1000; %V/°C
 seriesPanelsNumber=400;
 parallelsPanelsNumber=1;
+
 PvField=PhotovoltaicField(Npannelli,Pnom,Vpanel_mpp,panelPowerTemperatureCoefficient,...
     panelVoltageTemperatureCoefficient,seriesPanelsNumber,parallelsPanelsNumber);
 Ppv_k=getMaxOutputPowerSTC(PvField,G_k);
 
 Ppv_k_scaled=rescaleMPPByTemperature(PvField,Ppv_k,T_k);
 
+margin_k=ones(1440,1)*10*1000;
+optimizePanelsNumber(PvField,Ppv_k,10*1000,margin_k);
+
+%% - Inverter Fotovoltaico (Solarmax) -
+
+
 %% - Carico -
 Pload_k=vector(:,2)*1000; %W 
 carico=Load(Pload_k);
 
-%% Grafici (1)
+
+%% Calcolo del residuo di potenza tra quello prodotto e assorbito
+for j=1:1:4
+    for k=1:1:3
+        Presiduo_k(:,j,k) = Ppv_k_scaled(:,j,k) - Pload_k;
+    end
+end
+%Potenza residua
+%Presiduo = Ppv_k_scaled-Pload_k;
+
+%% - Batteria -
+fullCapacity=210000; %W
+capacity=210000; %W
+dod=0.90; 
+Pmax=3300*6*14; %W
+Befficiency=0.98; 
+
+Battery = SimpleBattery(fullCapacity, dod, Pmax, Befficiency);
+[energia,Presidual] = batteryEnergy_k(Battery,0.0167,Presiduo_k)
+    
+
+%% Grafici (1) -> Grafici potenze fotovoltaico per tutti i mesi e casi
 
 figure(1)
-
-% Grafici potenze fotovoltaico
-
 %Aprile
 subplot(2,2,1)
 for i=1:1:3
@@ -150,8 +175,10 @@ xlabel 'time'
 ylabel 'Ppv(k) [Kw]'
 title 'Dicembre'
 
-%% Grafici (2)
+%% Grafici (2) -> Effetto di scalatura della potenza dovuto alla temperatura
+
 figure(2)
+% Agosto
 subplot(1,2,1)
 plot(time_minutes,Ppv_k(:,2,1)/1000);
 hold on
@@ -161,6 +188,7 @@ legend('soleggiato-STC','soleggiato')
 xlabel 'time'
 ylabel 'Ppv(k)'
 
+% Ottobre
 subplot(1,2,2)
 plot(time_minutes,Ppv_k(:,3,1)/1000);
 hold on
@@ -173,3 +201,58 @@ ylabel 'Ppv(k)'
 % I mesi Aprile, Ottobre e Dicembre 
 % non risentono dell'effetto di scalatura della potenza dovuto
 % alla temperatura, essendo questa al di sotto di 25°C
+
+%% Grafici (3) -> Potenze Residue e di Carico per tutti i mesi e casi
+
+figure(3)
+% Aprile
+subplot(2,2,1)
+for i=1:1:3
+    plot(hours,Presiduo_k(:,1,i)/1000)
+    hold on
+end
+plot(hours,Pload_k/1000,'r')
+legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+title('Presiduo(k) Aprile')
+xlabel 'ore'
+ylabel 'Potenze [Kw]'
+
+% Agosto
+subplot(2,2,2)
+for i=1:1:3
+    plot(hours,Presiduo_k(:,2,i)/1000)
+    hold on
+end
+plot(hours,Pload_k/1000,'r')
+legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+title('Presiduo(k) Agosto')
+xlabel 'ore'
+ylabel 'Potenze [Kw]'
+axis ([0 24 -20 100])
+
+% Ottobre
+subplot(2,2,3)
+for i=1:1:3
+    plot(hours,Presiduo_k(:,3,i)/1000)
+    hold on
+end
+plot(hours,Pload_k/1000,'r')
+legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+title('Presiduo(k) Ottobre')
+xlabel 'ore'
+ylabel 'Potenze [Kw]'
+
+% Dicembre
+subplot(2,2,4)
+for i=1:1:3
+    plot(hours,Presiduo_k(:,4,i)/1000)
+    hold on
+end
+plot(hours,Pload_k/1000,'r')
+legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+title('Presiduo(k) Dicembre')
+xlabel 'ore'
+ylabel 'Potenze [Kw]'
+
+% Presiduo negativo => Potenza assorbita dalla batteria
+% Presiduo positivo => Potenza fornita alla batteria

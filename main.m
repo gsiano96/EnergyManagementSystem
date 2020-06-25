@@ -55,7 +55,7 @@ T_k(:,4,1)=IrradianzaDicembre.T;
 %% - Potenza nominale in condizioni STC -
 % STC <=> T=25°C, G(t)=1000 w/m^2 (massima irradianza)
 Pnom=327;
-Npannelli=400;
+Npannelli=110;
 Pnompv=Pnom*Npannelli;
 
 %% - Potenze generate dal fotovoltaico nei mesi -
