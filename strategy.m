@@ -106,14 +106,17 @@ efficiency_k=[0;efficiency_k];
 
 % ATTENZIONE non possiamo scendere sotto i 120Kw per non avere un fenomeno di power clipping
 Pindcmax = 130*1e3;  %nominal P DC
-Poutacmax = 100*1e3; %max P AC
+Poutacmax = 100*1e3; %max P AC  <- ERRORE
 
 inputVoltageInterval = [430,900];
-outputVoltageInterval = 400;%numerpo sul datashet;
+outputVoltageInterval = 400; % numero sul datashet;
 phasesNumber = 3; % trifase
 
-Inverter = SolarmaxInverter(Prel_k(:),efficiency_k(:),Pindcmax,Poutacmax, inputVoltageInterval, outputVoltageInterval, phasesNumber);
-Prel_k = getRelativePowers(Inverter,Ppv_k_scaled);
+Inverter = Solarmaxinverter(Prel_k,efficiency_k,Pindcmax,Poutacmax, inputVoltageInterval, outputVoltageInterval, phasesNumber);
+%potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
+[Pinput_k,Pout_k] = getCharacteristicPout_Pin(Inverter,true);
+% Interpolazione dei punti dell'asse Pinput corrispondenti a Ppv
+Ppv_out_k = interpolateInputPowerPoints(Inverter ,Ppv_k_scaled,'linear');
 
 %% - Carico -
 Pload_k=vector(:,2)*1000; %W 
@@ -122,11 +125,9 @@ carico=Load(Pload_k);
 %% - Calcolo della Potenza Residua -
 for j=1:1:4
     for k=1:1:3
-        Presiduo_k(:,j,k) = Ppv_k_scaled(:,j,k) - Pload_k;
+        Presiduo_k(:,j,k) = Ppv_out_k(:,j,k) - Pload_k;
     end
 end
-%Potenza residua
-%Presiduo = Ppv_k_scaled-Pload_k;
 
 %% - Batteria -
 fullCapacity = 210*1e3; % Capacità della Batteria in Wh
@@ -140,9 +141,9 @@ Pbat_k = 3300; %W
 Befficiency = 0.98; % Rendimento della Batteria
 
 Battery = SimpleBattery(fullCapacity, dod, Pbat_k, Befficiency);
-[energia,Presidual] = batteryEnergy_k(Battery,0.0167,Presiduo_k)
+[energia,Presidual] = batteryEnergy_k(Battery,0.0167,Presiduo_k);
 
-figure(4),plot(time_minutes,energia(:,1,1)/1000);
+%figure(4),plot(time_minutes,energia(:,1,1)/1000);
 
 
 %% - Inverter per batteria Sonnen -
@@ -156,11 +157,66 @@ rendimentoInverterBatteria = 0.95;
 % Flusso di potenza input/output in uscita/ingresso dall'inverter
 %Presiduo_bat_inverter = Presiduo_k*rendimentoInverterBatteria;
 
-
-
-%% Grafici (1) -> Grafici potenze fotovoltaico per tutti i mesi e casi
-
+%% Grafici (1) -> Caratteristica ingresso-uscita Potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
 figure(1)
+plot(Pinput_k/1000,Pout_k/1000);
+title("Caratteristica ingresso-uscita potenza PV tenendo conto dell'efficienza dell'inverter e temperatura") 
+xlabel 'Pinput [kw]'
+ylabel 'Pout [kw]'
+axis ([0 140 0 140])
+
+%% Grafici (2) -> Potenze fotovoltaico - potenze in uscita dall'inverter
+
+figure(2)
+% Dicembre
+subplot(2,2,1)
+for i=1:1:3
+    plot(Ppv_k_scaled(:,4,i)/1000,Ppv_out_k(:,4,i)/1000)
+    hold on
+end
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'Ppv_k_scaled(k) [Kw]'
+ylabel 'Ppv-out(k) [Kw]'
+title("Potenza del fotovoltaico in uscita dall'inverter Dicembre")
+
+% Aprile
+subplot(2,2,2)
+for i=1:1:3
+    plot(Ppv_k_scaled(:,1,i)/1000,Ppv_out_k(:,1,i)/1000)
+    hold on
+end
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'Ppv_k_scaled(k) [Kw]'
+ylabel 'Ppv-out(k) [Kw]'
+title("Potenza del fotovoltaico in uscita dall'inverter Aprile")
+axis ([0 140 0 140])
+
+% Agosto
+subplot(2,2,3)
+for i=1:1:3
+    plot(Ppv_k_scaled(:,2,i)/1000,Ppv_out_k(:,2,i)/1000)
+    hold on
+end
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'Ppv_k_scaled(k) [Kw]'
+ylabel 'Ppv-out(k) [Kw]'
+title("Potenza del fotovoltaico in uscita dall'inverter Agosto")
+axis ([0 140 0 140])
+
+% Ottobre
+subplot(2,2,4)
+for i=1:1:3
+    plot(Ppv_k_scaled(:,3,i)/1000,Ppv_out_k(:,3,i)/1000)
+    hold on
+end
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'Ppv_k_scaled(k) [Kw]'
+ylabel 'Ppv-out(k) [Kw]'
+title("Potenza del fotovoltaico in uscita dall'inverter Ottobre")
+
+%% Grafici (3) -> Grafici potenze fotovoltaico per tutti i mesi e casi
+
+figure(3)
 %Aprile
 subplot(2,2,1)
 for i=1:1:3
@@ -209,9 +265,9 @@ xlabel 'time'
 ylabel 'Ppv(k) [Kw]'
 title 'Dicembre'
 
-%% Grafici (2) -> Effetto di scalatura della potenza dovuto alla temperatura
+%% Grafici (4) -> Effetto di scalatura della potenza dovuto alla temperatura
 
-figure(2)
+figure(4)
 % Agosto
 subplot(1,2,1)
 plot(time_minutes,Ppv_k(:,2,1)/1000);
@@ -236,9 +292,9 @@ ylabel 'Ppv(k)'
 % non risentono dell'effetto di scalatura della potenza dovuto
 % alla temperatura, essendo questa al di sotto di 25°C
 
-%% Grafici (3) -> Potenze Residue e di Carico per tutti i mesi e casi
+%% Grafici (5) -> Potenze Residue e di Carico per tutti i mesi e casi
 
-figure(3)
+figure(5)
 % Aprile
 subplot(2,2,1)
 for i=1:1:3
