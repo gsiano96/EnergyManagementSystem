@@ -96,15 +96,30 @@ Ppv_k_scaled=rescaleMPPByTemperature(PvField,Ppv_k,T_k);
 margin_k=ones(1440,1)*10*1000;
 optimizePanelsNumber(PvField,Ppv_k,10*1000,margin_k);
 
-%% - Inverter Fotovoltaico (Solarmax) -
+%% - Inverter Fotovoltaico Solarmax -
 
+Prel_k=SolarmaxInverter.relativePower/100;
+efficiency_k=SolarmaxInverter.efficiency/100;
+% Aggiunto lo 0 per uniformare l'asse
+Prel_k=[0;Prel_k];
+efficiency_k=[0;efficiency_k];
+
+% ATTENZIONE non possiamo scendere sotto i 120Kw per non avere un fenomeno di power clipping
+Pindcmax = 130*1e3;  %nominal P DC
+Poutacmax = 100*1e3; %max P AC
+
+inputVoltageInterval = [430,900];
+outputVoltageInterval = 400;%numerpo sul datashet;
+phasesNumber = 3; % trifase
+
+Inverter = SolarmaxInverter(Prel_k(:),efficiency_k(:),Pindcmax,Poutacmax, inputVoltageInterval, outputVoltageInterval, phasesNumber);
+Prel_k = getRelativePowers(Inverter,Ppv_k_scaled);
 
 %% - Carico -
 Pload_k=vector(:,2)*1000; %W 
 carico=Load(Pload_k);
 
-
-%% Calcolo del residuo di potenza tra quello prodotto e assorbito
+%% - Calcolo della Potenza Residua -
 for j=1:1:4
     for k=1:1:3
         Presiduo_k(:,j,k) = Ppv_k_scaled(:,j,k) - Pload_k;
@@ -114,15 +129,34 @@ end
 %Presiduo = Ppv_k_scaled-Pload_k;
 
 %% - Batteria -
-fullCapacity=210000; %W
-capacity=210000; %W
-dod=0.90; 
-Pmax=3300*6*14; %W
-Befficiency=0.98; 
+fullCapacity = 210*1e3; % Capacità della Batteria in Wh
+capacity = 210*1e3; % Wh
+dod = 0.90; 
+Pbat_k = 3300; %W
 
-Battery = SimpleBattery(fullCapacity, dod, Pmax, Befficiency);
+% Non tutta la potenza in ingresso/uscita è utilizzata per 
+% caricare/scaricare la batteria a causa del suo rendimento di 
+% carica/scarica.
+Befficiency = 0.98; % Rendimento della Batteria
+
+Battery = SimpleBattery(fullCapacity, dod, Pbat_k, Befficiency);
 [energia,Presidual] = batteryEnergy_k(Battery,0.0167,Presiduo_k)
-    
+
+figure(4),plot(time_minutes,energia(:,1,1)/1000);
+
+
+%% - Inverter per batteria Sonnen -
+% Non tutta la potenza residua è utilizzata per scaricare/caricare la
+% batteria in quanto il flusso energetico in uscita/ingresso è frazionato
+% dal rendimento del suo inverter.
+
+rendimentoInverterBatteria = 0.95; 
+
+
+% Flusso di potenza input/output in uscita/ingresso dall'inverter
+%Presiduo_bat_inverter = Presiduo_k*rendimentoInverterBatteria;
+
+
 
 %% Grafici (1) -> Grafici potenze fotovoltaico per tutti i mesi e casi
 

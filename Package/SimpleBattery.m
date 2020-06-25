@@ -32,7 +32,7 @@ classdef SimpleBattery
                     
             % Energia scambiata 
             Ein_k=cumtrapz(k,Pin_k)+obj.capacity;
-            
+
             E=Ein_k;
             Presidual=Presidual_k;
         end
