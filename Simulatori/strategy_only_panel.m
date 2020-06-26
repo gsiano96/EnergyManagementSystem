@@ -9,7 +9,7 @@
     viene rivenduta al gestore elettrico a metà del prezzo d'acquisto in
     quella stessa ora.
 %}
-function [ wastedKwDay, moneySpentDay,moneyEarnedDay] = strategy_only_panel(P_nom_field,irradianceYearSimulation,Eload_k_kwh,costi,Inverter_threshold)
+function [ wastedKwDay, moneySpentDay,moneyEarnedDay] = strategy_only_panel(P_nom_field,irradianceYearSimulation,Eload_k_kwh,costi,Inverter_threshold_in, Inverter_threshold_out, yield_inv)
     costEnergy=spline(1:60:1440,costi,1:1440)./1000;
     costi_kw_min_vend=costEnergy-costEnergy*0.5;
     moneySpentDay=[];
@@ -40,10 +40,14 @@ function [ wastedKwDay, moneySpentDay,moneyEarnedDay] = strategy_only_panel(P_no
                 Eload_fix_act = Eload_k_kwh(h);
             end
             %--- Inverter Section -----
-            if Epv_d_act > Inverter_threshold
-                Epv_d_act = Inverter_threshold;
+            if Epv_d_act > Inverter_threshold_in
+                Epv_d_act = Inverter_threshold_in;
             end
-            Epv_d_act = Epv_d_act*0.95;
+            if Epv_d_act > Inverter_threshold_out
+                Epv_d_act = Inverter_threshold_out;
+            else
+                Epv_d_act = Epv_d_act*yield_inv;
+            end
             %--------------------------
             if Epv_d_act < Eload_fix_act
                 diff = Eload_fix_act - Epv_d_act;

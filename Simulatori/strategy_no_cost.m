@@ -10,7 +10,7 @@
     dal campo ed il rimanente dalla batteria se ne dispone, in caso 
     contrario dal gestore elettrico.
 %}
-function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle, battery_percentage_daily] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,Inverter_threshold)
+function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle, battery_percentage_daily] = strategy_no_cost(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw,Inverter_threshold_in, Inverter_threshold_out, yield_inv)
 
     costEnergy=spline(1:60:1440,costi,1:1440)./1000;
     costi_kw_min_vend=costEnergy-costEnergy*0.5;
@@ -43,10 +43,14 @@ function [wastedKwDay,moneySpentDay,moneyEarnedDay,recharge_cycle, battery_perce
                 Eload_fix_act = Eload_k_kwh(h);
             end
             %--- Inverter Section -----
-            if Epv_d_act > Inverter_threshold
-                Epv_d_act = Inverter_threshold;
+            if Epv_d_act > Inverter_threshold_in
+                Epv_d_act = Inverter_threshold_in;
             end
-            Epv_d_act = Epv_d_act*0.95;
+            if Epv_d_act > Inverter_threshold_out
+                Epv_d_act = Inverter_threshold_out;
+            else
+                Epv_d_act = Epv_d_act*yield_inv;
+            end
             %--------------------------
             if Epv_d_act < Eload_fix_act %verify if the actual energy produced by the PV is less then the energy request of the load
                 diff = Eload_fix_act - Epv_d_act; %obtain the difference between the energies
