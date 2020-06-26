@@ -84,17 +84,16 @@ cost_cycle = cost_tot/cycles;
 
 % Ma proprio veramente cvhe più pezzotta non si può
 %https://www.alibaba.com/product-detail/Extra-long-5000-Cycle-Times-Rechargeable_1349859896.html?spm=a2700.7735675.normalList.1.4c4f4c67hWiKk4
-% n_mod = 175;
-% C_mod=210/n_mod;
+% n_mod = 88;
+% C_mod=211.2/n_mod;
 % C_tot_kw=C_mod*n_mod;
 % 
 % cycles = 4000; %(DoD = 0.8)
-% cost_mod=221.85;
+% cost_mod=310*0.45;
 % cost_tot=cost_mod*n_mod;
 % cost_cycle = cost_tot/cycles;
 
-
-%Setting the DoD for the battery
+% Setting the DoD for the battery
 DoD = 0.9;
 %% - Inverter Characteristic - 
 %Solarmax 100C
