@@ -53,6 +53,7 @@ Cost_PV = N_tot_pnl * Panel_cost; %[€]
 
 %% - Battery Characteristics -
 
+%SONNEN ECO - BATTERY
 
 %Modules characteristics - %"sonnen eco 9.43 - LiFePo4"
 %Prezzi Iva Esclusa (Sterlina-Euro 1:1)
@@ -69,9 +70,8 @@ cost_mod = 8000*0.45; % [€] %(scontato)
 cost_tot = cost_mod * n_mod; % [€]
 cost_cycle = cost_tot/cycles;
 
+%ALIEXPRESS - BATTERY
 %{
-%% Batteria Pezzotta is better (?)
-% citando alessio qua n'z pav!
 n_mod = 28; %(per modulo si intende un pacco batterie da 480 W/h nominali)
 C_mod=210/28; %6 kwh
 C_tot_kw=C_mod*n_mod; %210Kwh
@@ -82,34 +82,48 @@ cost_tot=cost_mod*n_mod;
 cost_cycle = cost_tot/cycles;
 %}
 
-% Ma proprio veramente cvhe più pezzotta non si può
+%ALIBABA - BATTERY
+%{
 %https://www.alibaba.com/product-detail/Extra-long-5000-Cycle-Times-Rechargeable_1349859896.html?spm=a2700.7735675.normalList.1.4c4f4c67hWiKk4
-% n_mod = 88;
-% C_mod=211.2/n_mod;
-% C_tot_kw=C_mod*n_mod;
-% 
-% cycles = 4000; %(DoD = 0.8)
-% cost_mod=310*0.45;
-% cost_tot=cost_mod*n_mod;
-% cost_cycle = cost_tot/cycles;
+n_mod = 88;
+C_mod=211.2/n_mod;
+C_tot_kw=C_mod*n_mod;
+
+cycles = 4000; %(DoD = 0.8)
+cost_mod=310*0.45;
+cost_tot=cost_mod*n_mod;
+cost_cycle = cost_tot/cycles;
+%}
 
 % Setting the DoD for the battery
 DoD = 0.9;
 %% - Inverter Characteristic - 
 %Solarmax 100C
-% inv_Threshold_single_in = 130;%[kW]
-% inv_Threshold_single_out = 100;%[kW]
-% n_inverter = 1;
-% yield_inv = 0.95; %(è mediato poichè possiamo passare da 98.8 a 97.8)
-%cost_inv_unit = 4000; %[€] 
-%cost_inv = n_inverter * cost_inv_unit;
+%{
+inv_Threshold_single_in = 130;%[kW]
+inv_Threshold_single_out = 100;%[kW]
+n_inverter = 1;
+yield_inv = 0.95; %(è mediato poichè possiamo passare da 98.8 a 97.8)
+cost_inv_unit = 4000; %[€] 
+cost_inv = n_inverter * cost_inv_unit;
+%}
 
 %SUNNY HIGHPOWER PEAK1
+%{
 inv_Threshold_single_in = 76.5; %[kW]
 inv_Threshold_single_out = 75; %[kW]
 n_inverter = 2;
 yield_inv = 0.98; %(è mediato poichè possiamo passare da 98.8 a 97.8)
 cost_inv_unit = 3500 * 0.45; %[€] %(scontato)
+cost_inv = n_inverter * cost_inv_unit; 
+%}
+
+%SUNNY TRIPOWER 25000TL 
+inv_Threshold_single_in = 25.55; %[kW]
+inv_Threshold_single_out = 25; %[kW]
+n_inverter = 5;
+yield_inv = 0.98; %(è mediato poichè possiamo passare da 98.3 a 97.8)
+cost_inv_unit = 2300 * 0.45; %[€] %(scontato)
 cost_inv = n_inverter * cost_inv_unit; 
 
 inv_Threshold_in = inv_Threshold_single_in * n_inverter;
@@ -473,7 +487,8 @@ cost_tot_1=cost_mod_1*n_mod;
 cost_cycle_1 = cost_tot_1/cycles_1;
 DoD_down = 0.6;
 
-plotHealtBattery(14,5000,'ChineseBattery')
+plotHealtBattery(14,4000,'ChineseBattery')
+plotHealtBattery(35,10000,'SonnenBattery')
 %Change DoD
 [wastedKwDay_DoD_1,moneySpentDay_DoD_1,moneyEarnedDay_DoD_1,recharge_cycle_DoD_1,battery_daily_DoD_1] = strategy_with_DoD(P_nom_field,irradianceYearSimulation,Eload_k_kwh, costi, C_tot_kw, cost_cycle_1, Eload_fix_kwh,DoD_down,inv_Threshold_in, inv_Threshold_out, yield_inv);
 
@@ -697,7 +712,6 @@ figure(22)
     title("Total Cost Comparation Strategies Selling")
 
 %Total cost without sell to electric manager
-plant_cost = Cost_PV + cost_tot+4000;
 figure(23)
     b = bar([nopan_dec,panne_dec+Cost_PV,no_dec+plant_cost,dod_dec+plant_cost,notte_dec+plant_cost]);
         b.FaceColor = 'flat';
