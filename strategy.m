@@ -13,7 +13,6 @@ load Irradianze_medie_giornaliere_per_mesi/Matfile/Irradianza_Dicembre.mat
 load Irradianze_medie_giornaliere_per_mesi/Matfile/Irradianza_Ottobre.mat
 
 load 'Matfile/Battery_health.mat'
-
 load 'Inverter/Solarmax_inverter.mat'
 
 %% - Import package -
@@ -24,9 +23,6 @@ hours=vector(:,1)/60;
 time=IrradianzaDicembre.time;
 time=datevec(time); %from datetime to matrix of date and time
 time=time(:,4); %extract hours as integers
-
-% Aggiunta ora 24
-%time(25)=24;
 
 start_time = datetime( '00:00', 'InputFormat', 'HH:mm' );
 start_time.Format = 'HH:mm';
@@ -50,9 +46,6 @@ for j=1:1:4
     % Terza pagina della matrice (caso nuvoloso)
     G_k(:,j,3)=G_k(:,j,1)*(1-0.80); % Caso peggiore => -80%
 end
-
-% Aggiunto ulteriore campione per ora 24 su tutte le pagine
-%G_k(25,:,:)=0;
 
 %% - Interpolazione fino a 1440 punti valore su ogni colonna di ogni pagina -
 G_k=abs(interp1(time_hours,G_k,time_minutes,'spline'));
@@ -116,34 +109,41 @@ Inverter = Solarmaxinverter(Prel_k,efficiency_k,Pindcmax,Poutacmax, inputVoltage
 %potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
 [Pinput_k,Pout_k] = getCharacteristicPout_Pin(Inverter,true);
 % Interpolazione dei punti dell'asse Pinput corrispondenti a Ppv
-Ppv_out_k = interpolateInputPowerPoints(Inverter ,Ppv_k_scaled,'linear');
+Ppv_out_k = interpolateInputPowerPoints(Inverter ,Ppv_k_scaled,'spline');
 
 %% - Carico -
 Pload_k=vector(:,2)*1000; %W 
 carico=Load(Pload_k);
 
-%% - Calcolo della Potenza Residua -
+% Energia assorbita dal carico
+Eload_k=cumtrapz(0.0167,Pload_k);
+
+%% - Calcolo della Potenza ed Energia Residua Fotovoltaico -
 for j=1:1:4
     for k=1:1:3
         Presiduo_k(:,j,k) = Ppv_out_k(:,j,k) - Pload_k;
     end
 end
 
+% Energia Residua Fotvoltaico
+Epv_res_k=cumtrapz(0.0167,Presiduo_k); 
+
+%figure(), plot(time_minutes,Epv_res_k(:,1,1)/1000), title 'Energia residua del pannello batteria'
+
 %% - Batteria -
 fullCapacity = 210*1e3; % Capacità della Batteria in Wh
 capacity = 210*1e3; % Wh
 dod = 0.90; 
-Pbat_k = 3300; %W
+P_inv_bat_k = 3300; 3300*14; %W
 
 % Non tutta la potenza in ingresso/uscita è utilizzata per 
 % caricare/scaricare la batteria a causa del suo rendimento di 
 % carica/scarica.
 Befficiency = 0.98; % Rendimento della Batteria
 
-Battery = SimpleBattery(fullCapacity, dod, Pbat_k, Befficiency);
-[energia,Presidual] = batteryEnergy_k(Battery,0.0167,Presiduo_k);
-
-%figure(4),plot(time_minutes,energia(:,1,1)/1000);
+Battery = SimpleBattery(fullCapacity, dod, P_inv_bat_k, Befficiency);
+%Energia Carica della batteria (in ingresso)
+[Ebat_carica_k,Presidual] = batteryEnergy_k(Battery,Presiduo_k, Pload_k);
 
 
 %% - Inverter per batteria Sonnen -
@@ -153,11 +153,27 @@ Battery = SimpleBattery(fullCapacity, dod, Pbat_k, Befficiency);
 
 rendimentoInverterBatteria = 0.95; 
 
+%Energia erogabile dalla batteria
+Eout_batt_inverter_k  = fullCapacity - (Eload_k + Eload_k*0.05);
+%figure(),plot(time_minutes,Eout_batt_inverter_k:,1,1)/1000),title 'Energia erogabile dalla batteria'
 
-% Flusso di potenza input/output in uscita/ingresso dall'inverter
-%Presiduo_bat_inverter = Presiduo_k*rendimentoInverterBatteria;
+%% Evoluzione Energia del sistema
+Etot_k = getEsystem(carico,Eload_k,Epv_res_k,Eout_batt_inverter_k);
+
+%% - Costo Totale energia -
+costoEnergia = 0.90; % €
+
+%costoPerKwh
+costoPerKwh =zeros(1440,4,3);
+    for i=1:1:4
+        for j=1:1:3
+            costoPerKwh(i,j) = Etot_k(1440,j,k) * costoEnergia;
+        end
+    end
+                
 
 %% Grafici (1) -> Caratteristica ingresso-uscita Potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
+
 figure(1)
 plot(Pinput_k/1000,Pout_k/1000);
 title("Caratteristica ingresso-uscita potenza PV tenendo conto dell'efficienza dell'inverter e temperatura") 
@@ -346,3 +362,97 @@ ylabel 'Potenze [Kw]'
 
 % Presiduo negativo => Potenza assorbita dalla batteria
 % Presiduo positivo => Potenza fornita alla batteria
+
+%% Grafici (6) -> Potenza Batteria per tutti i mesi e casi
+figure(6)
+
+%Aprile
+subplot(2,2,1)
+for i=1:1:3
+    plot(hours,Presidual(:,1,i)/1000)
+    hold on
+end
+title('Potenza di scarica/carica della batteria (Aprile)')
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'hours'
+ylabel 'Pbat(k) [KW]'
+
+%Agosto
+subplot(2,2,2)
+for i=1:1:3
+    plot(hours,Presidual(:,2,i)/1000)
+    hold on
+end
+title('Potenza di scarica/carica della batteria (Agosto)')
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'hours'
+ylabel 'Pbat(k) [KW]'
+
+%Ottobre
+subplot(2,2,3)
+for i=1:1:3
+    plot(hours,Presidual(:,3,i)/1000)
+    hold on
+end
+title('Potenza di scarica/carica della batteria (Ottobre)')
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'hours'
+ylabel 'Pbat(k) [KW]'
+
+%Dicembre
+subplot(2,2,4)
+for i=1:1:3
+    plot(hours,Presidual(:,4,i)/1000)
+    hold on
+end
+title('Potenza di scarica/carica della batteria (Dicembre)')
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'hours'
+ylabel 'Pbat(k) [KW]'
+
+%% Grafici (7) -> Energia di Carica Batteria per tutti i mesi e casi
+figure(7)
+
+%Aprile
+subplot(2,2,1)
+for i=1:1:3
+    plot(hours,Etot_k(:,1,i)/1000)
+    hold on
+end
+title('Energia totale consumata dal sistema (Aprile)')
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'hours'
+ylabel 'Etot_k [KW]'
+
+%Agosto
+subplot(2,2,2)
+for i=1:1:3
+    plot(hours,Etot_k(:,2,i)/1000)
+    hold on
+end
+title('Energia totale consumata dal sistema (Agosto)')
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'hours'
+ylabel 'Etot_k [KW]'
+
+%Ottobre
+subplot(2,2,3)
+for i=1:1:3
+    plot(hours,Etot_k(:,3,i)/1000)
+    hold on
+end
+title('Energia totale consumata dal sistema (Ottobre)')
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'hours'
+ylabel 'Etot_k [KW]'
+
+%Dicembre
+subplot(2,2,4)
+for i=1:1:3
+    plot(hours,Etot_k(:,4,i)/1000)
+    hold on
+end
+title('Energia totale consumata dal sistema (Dicembre)')
+legend('soleggiato','nuvoloso','caso peggiore');
+xlabel 'hours'
+ylabel 'Etot_k [KW]'

@@ -32,5 +32,21 @@ classdef Load
             Eresidual_dc_k=Egen_dc_k-Eload_dc_k;
         end
         
+        function E_tot_system=getEsystem(obj,Eload_k,Epv_res_k,Eout_batt_inverter_k)
+            Etot_k=zeros(1440,4,3);
+            for i=1:1:length(Etot_k)
+                for j=1:1:4
+                    for z=1:1:3
+                        if(Eload_k(i) <= Epv_res_k(i,j,z))
+                            Etot_k(i,j,z) = Epv_res_k(i,j,z);
+                        elseif(Eload_k(i) > Epv_res_k(i,j,z) && not(Eout_batt_inverter_k(i) == 0))
+                            Etot_k(i,j,z) = Eout_batt_inverter_k(i);
+                        end
+                    end
+                end
+            end
+            E_tot_system = Etot_k;
+        end
+        
     end
 end
