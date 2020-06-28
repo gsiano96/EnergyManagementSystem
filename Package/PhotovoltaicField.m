@@ -46,7 +46,7 @@ classdef PhotovoltaicField
         end
         
         function Ppv_k=rescaleMPPByTemperature(obj,Pmpp_k,temperatureDegree_k)
-            % Don't scale if the temperature is 25°C
+            % Don't scale if the temperature is 25ï¿½C
             %temperatureDegree_k(find(temperatureDegree_k == 25))=0;
             for i=1:1:length(temperatureDegree_k)
                 for j=1:1:4
@@ -81,7 +81,7 @@ classdef PhotovoltaicField
             %N*Ppan_k-Pload_k >= soglia
             Pgen_k(find(Pgen_k < 1))=inf;
             Pass_k(find(Pass_k < 1))=inf;
-            Ppan_k=Pgen_k/obj.Npanels;
+            Ppan_k=Pgen_k./obj.Npanels;
             Nmin=(margin_k+Pass_k)./Ppan_k;
         end
     end
