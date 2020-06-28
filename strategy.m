@@ -16,6 +16,8 @@ load 'Matfile/Battery_health.mat'
 
 load 'Inverter/Solarmax_inverter.mat'
 
+load 'Wind-speed/metereological_date.mat'
+
 %% - Import package -
 addpath Package
 
@@ -97,6 +99,44 @@ margin_k=ones(1440,1)*10*1000;
 optimizePanelsNumber(PvField,Ppv_k,10*1000,margin_k);
 
 %% - Inverter Fotovoltaico (Solarmax) -
+
+%% - Pala Eolica -
+%https://en.wind-turbine-models.com/turbines/1682-hummer-h25.0-100kw
+ratedPower=100*1000;
+ratedWindSpeed=10;
+cutinWindSpeed=2.5;
+cutoutWindSpeed=20;
+survivalWindSpeed=50;
+rotorDiameter=25;
+generatorVoltage=690;
+
+windTurbine=WindTurbine(ratedPower,ratedWindSpeed,cutinWindSpeed,cutoutWindSpeed,survivalWindSpeed,rotorDiameter,generatorVoltage);
+
+%windspeed_k=windTurbine.filterWindData(windDataset20072016,'20090101');
+
+windspeed_k(:,1)=MetereologicalDataApril.WS10m;
+windspeed_k(:,2)=MetereologicalDataAugust.WS10m;
+windspeed_k(:,3)=MetereologicalDataOctober.WS10m;
+windspeed_k(:,4)=MetereologicalDataDecember.WS10m;
+
+windspeed_k=interp1(time_hours,windspeed_k,time_minutes,'spline');
+
+Peol_k=zeros(1440,4);
+for j=1:1:4
+    Peol_k(:,j)=windTurbine.getOutputPower_k(1.2,windspeed_k(:,j));
+    Peol_k(:,j)=windTurbine.rescaleWindSpeedByAltitude(windspeed_k(:,j),235,0.34);
+end
+
+figure(3)
+titles=["Aprile" "Agosto" "Ottobre" "Dicembre"];
+for i=1:1:4
+    subplot(2,2,i)
+    plot(time_minutes,Peol_k(:,i))
+    datetick('x','HH:MM')
+    title(titles(i))
+    xlabel 'time'
+    ylabel 'Peol(k)'
+end
 
 
 %% - Carico -

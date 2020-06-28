@@ -81,8 +81,8 @@ classdef PhotovoltaicField
             %N*Ppan_k-Pload_k >= soglia
             Pgen_k(find(Pgen_k < 1))=inf;
             Pass_k(find(Pass_k < 1))=inf;
-            Ppan_k=Pgen_k/Npannelli;
-            Nmin=(margin_k+Pass_k)/Ppan_k;
+            Ppan_k=Pgen_k/obj.Npanels;
+            Nmin=(margin_k+Pass_k)./Ppan_k;
         end
     end
 end
