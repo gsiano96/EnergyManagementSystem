@@ -6,6 +6,7 @@ classdef PhotovoltaicField
         Ipanel_mpp {mustBeNumeric}
         panelPowerTemperatureCoefficient {mustBeNumeric}
         panelVoltageTemperatureCoefficient {mustBeNumeric}
+        NOCT {mustBeNumeric}
         
         seriesPanelsNumber {mustBeNumeric}
         parallelsPanelsNumber {mustBeNumeric}
@@ -19,7 +20,8 @@ classdef PhotovoltaicField
                 Vpanel_mpp,...
                 panelPowerTemperatureCoefficient,...
                 panelVotageTemperatureCoefficient,...
-                seriesPanelsNumber, parallelsPanelsNumber)
+                seriesPanelsNumber, parallelsPanelsNumber,...
+                NOCT)
             obj.Npanels=Npanels;
             obj.Ppanel_nominal=Ppanel_nominal;
             obj.Vpanel_mpp=Vpanel_mpp;
@@ -27,10 +29,10 @@ classdef PhotovoltaicField
             obj.panelVoltageTemperatureCoefficient=panelVotageTemperatureCoefficient;
             obj.seriesPanelsNumber=seriesPanelsNumber;
             obj.parallelsPanelsNumber=parallelsPanelsNumber;
-            
             obj.Pfield_nominal=obj.Ppanel_nominal*obj.Npanels;
             obj.Vfield_mpp=obj.Vpanel_mpp * seriesPanelsNumber;
             obj.Ifield_mpp=obj.Ipanel_mpp * parallelsPanelsNumber;
+            obj.NOCT= NOCT;
         end
         
         function Ppv_k=getMaxOutputPowerSTC(obj,G_k)
@@ -45,14 +47,16 @@ classdef PhotovoltaicField
            Vpv_k=(obj.Vfield_mpp / Gnominal) * G_k;
         end
         
-        function Ppv_k=rescaleMPPByTemperature(obj,Pmpp_k,temperatureDegree_k)
+        function Ppv_k=rescaleMPPByTemperature(obj,Pmpp_k,temperatureDegree_k,G_k)
             % Don't scale if the temperature is 25°C
             %temperatureDegree_k(find(temperatureDegree_k == 25))=0;
-            for i=1:1:length(temperatureDegree_k)
-                for j=1:1:4
-                    for k=1:1:3
-                        if(temperatureDegree_k(i,j,k) >= 25)
-                            factor_k(i,j,k)=1-obj.panelPowerTemperatureCoefficient*(temperatureDegree_k(i,j,k)-25);
+            tPv_k=ones(1440,4,3);
+            for i=1:1:length(tPv_k)
+                for j=1:1:4 % mesi
+                    for k=1:1:3 %condizioni climatiche
+                        tPv_k(i,j,k)= temperatureDegree_k(i,j,k)+((obj.NOCT-20)/800*G_k(i,j,k));
+                        if( tPv_k(i,j,k) >= 25)
+                            factor_k(i,j,k)=1-obj.panelPowerTemperatureCoefficient*(tPv_k(i,j,k)-25);
                         else
                             factor_k(i,j,k)=1;
                         end   
