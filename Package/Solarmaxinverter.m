@@ -47,5 +47,31 @@ classdef Solarmaxinverter
         function Prel_k=getRelativePowers(obj,Pinput_k)
             Prel_k=Pinput_k./obj.Pindcmax;
         end
+        
+        function med_targetPrel=getMeanTarget(obj,Ppv_k_scaled,Pindcmax)
+            targetPrel=zeros(1440,4,3);
+            for i=1:1:length(targetPrel)
+                for j=1:1:4
+                    for k=1:1:3
+                        targetPrel(i,j,k)=Ppv_k_scaled(i,j,k) / Pindcmax;
+                    end
+                    
+                end
+            end
+            med_targetPrel = mean(targetPrel);
+        end
+        
+        function max_targetPrel=getMaxTarget(obj,Ppv_k_scaled,Pindcmax)
+            targetPrel=zeros(1440,4,3);
+            for i=1:1:length(targetPrel)
+                for j=1:1:4
+                    for k=1:1:3
+                        targetPrel(i,j,k)=Ppv_k_scaled(i,j,k) / Pindcmax;
+                    end
+                    
+                end
+            end
+            max_targetPrel = max(targetPrel);
+        end
     end
 end

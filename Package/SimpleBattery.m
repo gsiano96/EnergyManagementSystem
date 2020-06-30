@@ -31,7 +31,7 @@ classdef SimpleBattery
                     end
                     
             % Energia scambiata 
-            Ein_k=cumtrapz(0.0167,Presidual_k)
+            Ein_k = cumtrapz(0.0167,Presidual_k);
             for i=1:1:length(Ein_k)
                 for j=1:1:4
                     for k=1:1:3
@@ -45,6 +45,21 @@ classdef SimpleBattery
                 
             E=Ein_k;
             Presidual=Presidual_k;
+        end
+        
+        function Eout_bat_k = getEoutBattery(obj,Eload_k,rendimentoInverterBatteria)
+            Eout_bat_k=zeros(1440,4,3);
+            for i=1:1:length(Eout_bat_k)
+                for j=1:1:4
+                    for k=1:1:3
+                        %lato batteria
+                        Eout_bat_k(i,j,k)=obj.capacity-Eload_k(i)/rendimentoInverterBatteria;
+                        if ( Eout_bat_k(i,j,k)<0)
+                            Eout_bat_k(i,j,k)=0;
+                        end
+                    end
+                end
+            end 
         end
         
     end
