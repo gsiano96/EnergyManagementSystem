@@ -114,6 +114,9 @@ Ppv_out_k = interpolateInputPowerPoints(Inverter ,Ppv_k_scaled,'spline');
 med_targetPrel=getMeanTarget(Inverter,Ppv_k_scaled,Pindcmax); % media
 max_targetPrel=getMaxTarget(Inverter,Ppv_k_scaled,Pindcmax); % massimo
 
+%Energia del fotvoltaico
+Epv_out_k=cumtrapz(0.0167,Ppv_out_k);
+%figure(),plot(time_minutes,Epv_out_k(:,1,1)/1000), title 'Energia del fotvoltaico'
 
 %% - Carico -
 Pload_k=vector(:,2)*1000; %W 
@@ -127,7 +130,6 @@ Eload_k=cumtrapz(0.0167,Pload_k);
 
 %% - Calcolo della Potenza Residua -
 %Differenza tra potenza erogata dal pannello e potenza assorbita dal carico
-
 for j=1:1:4
     for k=1:1:3
         Presiduo_k(:,j,k) = Ppv_out_k(:,j,k) - Pload_k;
@@ -136,9 +138,10 @@ end
 
 %Energia residua fotvoltaico-carico
 Epv_res_k=cumtrapz(0.0167,Presiduo_k);
+%figure(),plot(time_minutes,Epv_res_k(:,1,1)/1000), title 'Energia residua del sistema pannello-carico'
 
-% figure(),plot(time_minutes,Epv_res_k(:,1,1)/1000);
-% title 'Energia residua del sistema pannello-carico'
+% Calcolo del punti in cui abbiamo la completa compensazione tra la potenza 
+% erogata dal pannello e quella assorbita dal carico
 
 %% - Batteria Sonnen-
 fullCapacity = 210*1e3; % Capacit‡ della Batteria in Wh
@@ -179,6 +182,15 @@ Eout_bat_k=getEoutBattery(Battery,Eload_k,rendimentoInverterBatteria);
 
 %Evoluzione energia del sistema
 E_sist_res=Eout_bat_k+Epv_res_k;
+
+%Energia in batteria alla fine della giornata
+Ebat_end_day = zeros(4,3);
+for i=1:1:4
+    for j=1:1:3
+        Ebat_end_day(i,j) = (E_sist_res(1440,i,j)/1000)-(capacity/1000);
+    end
+end
+
 
 %% Grafici (1) -> Caratteristica ingresso-uscita Potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
 
@@ -469,35 +481,37 @@ figure(9)
 % Aprile
 subplot(2,2,1)
 for i=1:1:3
-    plot(hours,Presiduo_k(:,1,i)/1000)
+    plot(time_minutes,Presiduo_k(:,1,i)/1000)
     hold on
+    desx(1,i) = interp1(Presiduo_k(:,1,i),hours,0)
+    des =  datestr(desx/24,'HH:MM')
 end
-plot(hours,Pload_k/1000,'r')
+plot(time_minutes,Pload_k/1000,'r')
 legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
 title('Presiduo(k) Aprile')
 xlabel 'ore'
 ylabel 'Potenze [Kw]'
+xline(des(3,2),'--r','punto')
 
 % Agosto
 subplot(2,2,2)
 for i=1:1:3
-    plot(hours,Presiduo_k(:,2,i)/1000)
+    plot(time_minutes,Presiduo_k(:,2,i)/1000)
     hold on
 end
-plot(hours,Pload_k/1000,'r')
+plot(time_minutes,Pload_k/1000,'r')
 legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
 title('Presiduo(k) Agosto')
 xlabel 'ore'
 ylabel 'Potenze [Kw]'
-axis ([0 24 -20 100])
 
 % Ottobre
 subplot(2,2,3)
 for i=1:1:3
-    plot(hours,Presiduo_k(:,3,i)/1000)
+    plot(time_minutes,Presiduo_k(:,3,i)/1000)
     hold on
 end
-plot(hours,Pload_k/1000,'r')
+plot(time_minutes,Pload_k/1000,'r')
 legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
 title('Presiduo(k) Ottobre')
 xlabel 'ore'
@@ -506,10 +520,10 @@ ylabel 'Potenze [Kw]'
 % Dicembre
 subplot(2,2,4)
 for i=1:1:3
-    plot(hours,Presiduo_k(:,4,i)/1000)
+    plot(time_minutes,Presiduo_k(:,4,i)/1000)
     hold on
 end
-plot(hours,Pload_k/1000,'r')
+plot(time_minutes,Pload_k/1000,'r')
 legend('soleggiato', 'nuvoloso', 'caso peggiore')
 title('Presiduo(k) Dicembre')
 xlabel 'ore'
@@ -530,7 +544,7 @@ title('Energia complessiva del sistema Aprile')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
 yline(fullCapacity/1000,'-r','Capacit‡Batteria = 210 KWh');
-yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 20.58 KWh');
+yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 
 % Agosto
 subplot(2,2,2)
@@ -543,7 +557,7 @@ title('Energia complessiva del sistema Agosto')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
 yline(fullCapacity/1000,'-r','Capacit‡Batteria = 210 KWh');
-yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 20.58 KWh');
+yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 
 % Ottobre
 subplot(2,2,3)
@@ -556,7 +570,7 @@ title('Energia complessiva del sistema Ottobre')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
 yline(fullCapacity/1000,'-r','Capacit‡Batteria = 210 KWh');
-yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 20.58 KWh');
+yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 
 % Dicembre
 subplot(2,2,4)
@@ -569,4 +583,4 @@ title('Energia complessiva del sistema Dicembre')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
 yline(fullCapacity/1000,'-r','Capacit‡Batteria = 210 KWh');
-yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 20.58 KWh');
+yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
