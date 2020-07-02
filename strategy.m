@@ -483,15 +483,16 @@ subplot(2,2,1)
 for i=1:1:3
     plot(time_minutes,Presiduo_k(:,1,i)/1000)
     hold on
-    desx(1,i) = interp1(Presiduo_k(:,1,i),hours,0)
-    des =  datestr(desx/24,'HH:MM')
+    idx_giorno(i) = interp1(Presiduo_k(:,1,i),hours,0,'nearest');
+    time_idx_giorno= datetime(string(datestr(idx/24,'HH:MM')) ,'InputFormat','HH:mm')
+    
 end
 plot(time_minutes,Pload_k/1000,'r')
 legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
 title('Presiduo(k) Aprile')
 xlabel 'ore'
 ylabel 'Potenze [Kw]'
-xline(des(3,2),'--r','punto')
+xline(time_idx_giorno(1),'--r','punto')
 
 % Agosto
 subplot(2,2,2)
