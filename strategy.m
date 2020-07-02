@@ -483,25 +483,47 @@ subplot(2,2,1)
 for i=1:1:3
     plot(time_minutes,Presiduo_k(:,1,i)/1000)
     hold on
-    idx_giorno(i) = interp1(Presiduo_k(:,1,i),hours,0,'nearest');
-    time_idx_giorno= datetime(string(datestr(idx/24,'HH:MM')) ,'InputFormat','HH:mm')
-    
+    idx_giorno_apr(i) = interp1(Presiduo_k(:,1,i),hours,0,'nearest');
+    time_idx_giorno_apr = datetime(string(datestr(idx_giorno_apr/24,'HH:MM')) ,'InputFormat','HH:mm')
+    idx_sera_apr(i) = interp1(Presiduo_k(end:-1:720,1,i),hours(end:-1:720),0,'nearest')
+    time_idx_sera_apr = datetime(string(datestr(idx_sera_apr/24,'HH:MM')) ,'InputFormat','HH:mm')
+    xline(time_idx_sera_apr(i),'-r','punto') 
+    xline(time_idx_giorno_apr(i),'-m','punto')
 end
-plot(time_minutes,Pload_k/1000,'r')
-legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+legend('soleggiato', 'nuvoloso', 'caso peggiore')
 title('Presiduo(k) Aprile')
 xlabel 'ore'
 ylabel 'Potenze [Kw]'
-xline(time_idx_giorno(1),'--r','punto')
+
+% figure(11)
+% subplot(2,2,1)
+% for j=1:1:3
+%     plot(time_minutes,Presiduo_k(:,1,j)/1000)
+%     hold on
+%     desx2(j) = interp1(Presiduo_k(end:-1:720,1,j),hours(end:-1:720),0,'nearest')
+%     des2 =  datestr(desx2/24,'HH:MM')
+%     str2 = string(des2)
+%     date2 = datetime(str2 ,'InputFormat','HH:mm')
+%     xline(date2(j),'-r','punto') 
+% end
+% legend('soleggiato', 'nuvoloso', 'caso peggiore')
+% title('Presiduo(k) Aprile')
+% xlabel 'ore'
+% ylabel 'Potenze [Kw]'
 
 % Agosto
 subplot(2,2,2)
 for i=1:1:3
-    plot(time_minutes,Presiduo_k(:,2,i)/1000)
+   plot(time_minutes,Presiduo_k(:,2,i)/1000)
     hold on
+    idx_giorno_ago(i) = interp1(Presiduo_k(:,2,i),hours,0,'nearest');
+    time_idx_giorno_ago = datetime(string(datestr(idx_giorno_ago/24,'HH:MM')) ,'InputFormat','HH:mm')
+    idx_sera_ago(i) = interp1(Presiduo_k(end:-1:720,2,i),hours(end:-1:720),0,'nearest')
+    time_idx_sera_ago = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm')
+    xline(time_idx_sera_ago(i),'-r','punto') 
+    xline(time_idx_giorno_ago(i),'-m','punto')
 end
-plot(time_minutes,Pload_k/1000,'r')
-legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+legend('soleggiato', 'nuvoloso', 'caso peggiore')
 title('Presiduo(k) Agosto')
 xlabel 'ore'
 ylabel 'Potenze [Kw]'
@@ -509,11 +531,16 @@ ylabel 'Potenze [Kw]'
 % Ottobre
 subplot(2,2,3)
 for i=1:1:3
-    plot(time_minutes,Presiduo_k(:,3,i)/1000)
+   plot(time_minutes,Presiduo_k(:,3,i)/1000)
     hold on
+    idx_giorno_ott(i) = interp1(Presiduo_k(:,3,i),hours,0,'nearest');
+    time_idx_giorno_ott = datetime(string(datestr(idx_giorno_ott/24,'HH:MM')) ,'InputFormat','HH:mm')
+    idx_sera_ott(i) = interp1(Presiduo_k(end:-1:720,3,i),hours(end:-1:720),0,'nearest')
+    time_idx_sera_ott = datetime(string(datestr(idx_sera_ott/24,'HH:MM')) ,'InputFormat','HH:mm')
+    xline(time_idx_sera_ott(i),'-r','punto') 
+    xline(time_idx_giorno_ott(i),'-m','punto')
 end
-plot(time_minutes,Pload_k/1000,'r')
-legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+legend('soleggiato', 'nuvoloso', 'caso peggiore')
 title('Presiduo(k) Ottobre')
 xlabel 'ore'
 ylabel 'Potenze [Kw]'
@@ -521,14 +548,20 @@ ylabel 'Potenze [Kw]'
 % Dicembre
 subplot(2,2,4)
 for i=1:1:3
-    plot(time_minutes,Presiduo_k(:,4,i)/1000)
+   plot(time_minutes,Presiduo_k(:,4,i)/1000)
     hold on
+    idx_giorno_dic(i) = interp1(Presiduo_k(:,4,i),hours,0,'nearest');
+    time_idx_giorno_dic = datetime(string(datestr(idx_giorno_dic/24,'HH:MM')) ,'InputFormat','HH:mm')
+    idx_sera_dic(i) = interp1(Presiduo_k(end:-1:720,4,i),hours(end:-1:720),0,'nearest')
+    time_idx_sera_dic = datetime(string(datestr(idx_sera_dic/24,'HH:MM')) ,'InputFormat','HH:mm')
+    xline(time_idx_sera_dic(i),'-r','punto') 
+    xline(time_idx_giorno_dic(i),'-m','punto')
 end
-plot(time_minutes,Pload_k/1000,'r')
 legend('soleggiato', 'nuvoloso', 'caso peggiore')
 title('Presiduo(k) Dicembre')
 xlabel 'ore'
 ylabel 'Potenze [Kw]'
+
 
 
 %% Evoluzione energetica del sistema 
