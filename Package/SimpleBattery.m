@@ -54,7 +54,7 @@ classdef SimpleBattery
                     for k=1:1:3
                         %lato batteria
                         Eout_bat_k(i,j,k)=obj.capacity-Eload_k(i)/rendimentoInverterBatteria;
-                        if ( Eout_bat_k(i,j,k)<0)
+                        if (Eout_bat_k(i,j,k)<0)
                             Eout_bat_k(i,j,k)=0;
                         end
                     end
