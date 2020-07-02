@@ -562,6 +562,7 @@ figure(10)
 subplot(2,2,1)
 plot(time_minutes,E_sist_res(:,1,1)/1000)
 idx_giorno_apr = interp1(Presiduo_k(1:1:720,1,1),hours(1:1:720),0,'nearest');
+
 time_idx_giorno_apr = datetime(string(datestr(idx_giorno_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
 idx_sera_apr = interp1(Presiduo_k(end:-1:720,1,1),hours(end:-1:720),0,'nearest');
 time_idx_sera_apr = datetime(string(datestr(idx_sera_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
