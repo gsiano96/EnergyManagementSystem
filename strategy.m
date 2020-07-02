@@ -160,15 +160,13 @@ Battery = SimpleBattery(fullCapacity, dod, P_inv_bat_k, Befficiency);
 [Ebat_in_k,Presidual] = batteryEnergy_k(Battery,Presiduo_k,Pload_k);
 % figure(), plot(time_minutes,Ebat_in_k(:,2,1)/1000);
 
-%Calcolo delle ore necessaarie a carciare la batteria partendo da una
+%Calcolo delle ore necessarie a caricare la batteria partendo da una
 %capacità residua pari a zero
-% 15Kwh =6 moduli da 2.5kwh
-% 
+% 15Kwh =6 moduli da 2.5kwh 
 % 210kwh=6 moduli *14
-% 
 % Ptotass_ero=14*48*75=50.4kW
-% 
 % Tempo_carica=210kWh/50.4kW=4,16h
+
 %% Fase di scarica della batteria
 % - Inverter per batteria Sonnen -
 % Non tutta la potenza residua è utilizzata per scaricare/caricare la
@@ -187,24 +185,12 @@ Eout_bat_k=getEoutBattery(Battery,Eload_k,rendimentoInverterBatteria);
 % Flusso di potenza input/output in uscita/ingresso dall'inverter
 %Presiduo_bat_inverter = Presiduo_k*rendimentoInverterBatteria;
 
-
 %Evoluzione energia del sistema
 E_sist_res=Eout_bat_k+Epv_res_k;
 
 %Energia in batteria alla fine della giornata
+Ebat_end_day = getEBatteryEndDay(Battery,E_sist_res);
 
-Ebat_end_day=zeros(4,3);
-for k=1:1:length(E_sist_res)
-    for i=1:1:4
-        for j=1:1:3
-           if (E_sist_res(k,i,j)>capacity)
-                a(i,j)=max(E_sist_res(:,i,j));
-                Ebat_end_day(i,j) =E_sist_res(1440,i,j)- (a(i,j) -(capacity));
-           end
-
-        end
-    end
-end
 
 %% Grafici (1) -> Caratteristica ingresso-uscita Potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
 

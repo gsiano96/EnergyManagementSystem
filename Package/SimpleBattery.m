@@ -62,5 +62,18 @@ classdef SimpleBattery
             end 
         end
         
+        function Ebat_end_day = getEBatteryEndDay(obj,E_sist_res)
+            Ebat_end_day=zeros(4,3);
+            for k=1:1:length(E_sist_res)
+                for i=1:1:4
+                    for j=1:1:3
+                        if (E_sist_res(k,i,j) > obj.capacity)
+                            Ebat_end_day(i,j) = obj.capacity - (max(E_sist_res(:,i,j))- E_sist_res(1440,i,j));
+                        end
+                    end
+                end
+            end
+        end
+            
     end
 end
