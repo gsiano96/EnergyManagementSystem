@@ -1,7 +1,7 @@
 classdef SolarmaxInverter
     properties
-        Prel_k {mustBeNumeric} %Prel_k=Pin_k/Pindcmax
-        efficiency_k {mustBeNumeric} %efficiency
+        %Prel_k {mustBeNumeric} %Prel_k=Pin_k/Pindcmax
+        %efficiency_k {mustBeNumeric} %efficiency
         Pindcmax {mustBeNumeric} %nominal P DC
         Poutacmax {mustBeNumeric} %max P AC
         inputVoltageInterval {mustBeNumeric}
@@ -10,15 +10,14 @@ classdef SolarmaxInverter
     end
     methods
         
-        function obj = SolarmaxInverter(Prel_k,efficiency_k,Pindcmax,Poutacmax,...
-                inputVoltageInterval, outputVoltageInterval, phasesNumber)
-            obj.Prel_k=Prel_k;
-            obj.efficiency_k=efficiency_k;
-            obj.Pindcmax=Pindcmax;
-            obj.Poutacmax=Poutacmax;
-            obj.inputVoltageInterval=inputVoltageInterval;
-            obj.outputVoltage=outputVoltageInterval;
-            obj.phasesNumber=phasesNumber;
+        function obj = SolarmaxInverter()
+            %obj.Prel_k=Prel_k;
+            %obj.efficiency_k=efficiency_k;
+            %obj.Pindcmax=Pindcmax;
+            %obj.Poutacmax=Poutacmax;
+            %obj.inputVoltageInterval=inputVoltageInterval;
+            %obj.outputVoltage=outputVoltageInterval;
+            %obj.phasesNumber=phasesNumber;
         end
         
         function [Pin_k,Pout_k]=getCharacteristicPout_Pin(obj,applyCutoff)

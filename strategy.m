@@ -92,6 +92,25 @@ margin_k=ones(1440,1)*10*1000;
 optimizePanelsNumber(PvField,Ppv_k,10*1000,margin_k);
 
 %% - Inverter Fotovoltaico Solarmax -
+% ATTENZIONE non possiamo scendere sotto i 120Kw per non avere un fenomeno di power clipping
+Pindcmax = 130*1e3;  %nominal P DC
+Poutacmax = 100*1e3; %max P AC  <- ERRORE
+Prel_k=SolarmaxInverter.relativePower/100;
+efficiency_k=SolarmaxInverter.efficiency/100;
+
+% Aggiunto lo 0 per uniformare l'asse
+Prel_k=[0;Prel_k];
+efficiency_k=[0;efficiency_k];
+
+inputVoltageInterval = 430 %900];
+outputVoltageInterval = 400; % numero sul datashet;
+phasesNumber = 3; % trifase
+
+inverter = SolarmaxInverter();
+%potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
+[Pinput_k,Pout_k] = getCharacteristicPout_Pin(Inverter,true);
+% Interpolazione dei punti dell'asse Pinput corrispondenti a Ppv
+Ppv_out_k = interpolateInputPowerPoints(Inverter ,Ppv_k_scaled,'spline');
 
 %% - Pala Eolica -
 %https://en.wind-turbine-models.com/turbines/1682-hummer-h25.0-100kw
@@ -102,11 +121,6 @@ cutoutWindSpeed=20;
 survivalWindSpeed=50;
 rotorDiameter=25;
 generatorVoltage=690;
-Prel_k=SolarmaxInverter.relativePower/100;
-efficiency_k=SolarmaxInverter.efficiency/100;
-% Aggiunto lo 0 per uniformare l'asse
-Prel_k=[0;Prel_k];
-efficiency_k=[0;efficiency_k];
 
 windTurbine=WindTurbine(ratedPower,ratedWindSpeed,cutinWindSpeed,cutoutWindSpeed,survivalWindSpeed,rotorDiameter,generatorVoltage);
 
@@ -124,32 +138,6 @@ for j=1:1:4
     Peol_k(:,j)=windTurbine.getOutputPower_k(1.2,windspeed_k(:,j));
     Peol_k(:,j)=windTurbine.rescaleWindSpeedByAltitude(windspeed_k(:,j),235,0.34);
 end
-
-figure(3)
-titles=["Aprile" "Agosto" "Ottobre" "Dicembre"];
-for i=1:1:4
-    subplot(2,2,i)
-    plot(time_minutes,Peol_k(:,i))
-    datetick('x','HH:MM')
-    title(titles(i))
-    xlabel 'time'
-    ylabel 'Peol(k)'
-end
-
-
-% ATTENZIONE non possiamo scendere sotto i 120Kw per non avere un fenomeno di power clipping
-Pindcmax = 130*1e3;  %nominal P DC
-Poutacmax = 100*1e3; %max P AC  <- ERRORE
-
-inputVoltageInterval = [430,900];
-outputVoltageInterval = 400; % numero sul datashet;
-phasesNumber = 3; % trifase
-
-Inverter = Solarmaxinverter(Prel_k,efficiency_k,Pindcmax,Poutacmax, inputVoltageInterval, outputVoltageInterval, phasesNumber);
-%potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
-[Pinput_k,Pout_k] = getCharacteristicPout_Pin(Inverter,true);
-% Interpolazione dei punti dell'asse Pinput corrispondenti a Ppv
-Ppv_out_k = interpolateInputPowerPoints(Inverter ,Ppv_k_scaled,'spline');
 
 %% - Carico -
 Pload_k=vector(:,2)*1000; %W 
@@ -496,3 +484,14 @@ title('Energia totale consumata dal sistema (Dicembre)')
 legend('soleggiato','nuvoloso','caso peggiore');
 xlabel 'hours'
 ylabel 'Etot_k [KW]'
+
+figure(8)
+titles=["Aprile" "Agosto" "Ottobre" "Dicembre"];
+for i=1:1:4
+    subplot(2,2,i)
+    plot(time_minutes,Peol_k(:,i))
+    datetick('x','HH:MM')
+    title(titles(i))
+    xlabel 'time'
+    ylabel 'Peol(k)'
+end
