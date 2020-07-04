@@ -41,6 +41,12 @@ classdef PhotovoltaicField
            Ppv_k=(obj.Pfield_nominal / Gnominal) * G_k;
         end
         
+        function getMaxOutputPowerSTCSinglePanel(obj)
+           Gnominal=1000; %W/m^2
+           %Proportional scale
+           Ppv_k=(obj.Ppanel_nominal / Gnominal) * G_k;
+        end
+        
         function Vpv_k=getMaxOutputVoltageSTC(obj,G_k)
            Gnominal=1000; %W/m^2
            %Proportional scale
@@ -81,12 +87,9 @@ classdef PhotovoltaicField
             end
         end
         
-        function Nmin=optimizePanelsNumber(obj,Pgen_k,Pass_k, margin_k)
-            %N*Ppan_k-Pload_k >= soglia
-            Pgen_k(find(Pgen_k < 1))=inf;
-            Pass_k(find(Pass_k < 1))=inf;
-            Ppan_k=Pgen_k./obj.Npanels;
-            Nmin=(margin_k+Pass_k)./Ppan_k;
+        function Nmin=optimizePanelsNumber(obj, margin, Pload_med,Ppan_med)
+            %N*Ppan-Pload >= soglia
+            Nmin=(margin+Pload_med)/Ppan_med;
         end
     end
 end
