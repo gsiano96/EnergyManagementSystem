@@ -79,13 +79,13 @@ seriesPanelsNumber = 400;
 parallelsPanelsNumber = 1;
 NOCT = 45;
 
+
 PvField=PhotovoltaicField(Npannelli,Pnom,Vpanel_mpp,panelPowerTemperatureCoefficient,...
     panelVoltageTemperatureCoefficient,seriesPanelsNumber,parallelsPanelsNumber,NOCT);
 Ppv_k=getMaxOutputPowerSTC(PvField,G_k);
 
 Ppv_k_scaled=rescaleMPPByTemperature(PvField,Ppv_k,T_k,G_k);
-% margin_k=ones(1440,1)*10*1000;
-% optimizePanelsNumber(PvField,Ppv_k,10*1000,margin_k);
+
 
 %% - Inverter Fotovoltaico Solarmax da 100kw DC -
 Prel_k=SolarmaxInverter.relativePower/100;
@@ -161,18 +161,16 @@ Battery = ACBattery(fullCapacity, dod, P_inv_bat_k, Befficiency,rendimentoInvert
 Ebat_k = batteryEnergy_k(Battery,Presiduo_k);
 % figure(), plot(time_minutes,Ebat_k(:,2,1)/1000);
 
-%Calcolo delle ore necessarie a caricare la batteria partendo da una
-%capacità residua pari a zero
+%% Calcolo delle ore necessarie a caricare la batteria partendo da una
+% capacità residua pari a zero
+
 % 15Kwh =6 moduli da 2.5kwh 
 % 210kwh=6 moduli *14
 % Ptotass_ero=14*48*75=50.4kW
 % Tempo_carica=210kWh/50.4kW=4,16h
+enel_average_power = 50.4e+03;
 
-
-
-
-
-% Pout_bat=Pload_k;
+charging_time = getTimeToReload(Battery,enel_average_power,Ebat_k);
 
 %Energia erogata dalla batteria compresa di perdite dovute all'inverter interno
 % Eout_bat_k=getEoutBattery(Battery,Eload_k,rendimentoInverterBatteria);
@@ -182,14 +180,8 @@ Ebat_k = batteryEnergy_k(Battery,Presiduo_k);
 % Flusso di potenza input/output in uscita/ingresso dall'inverter
 %Presiduo_bat_inverter = Presiduo_k*rendimentoInverterBatteria;
 
-%Evoluzione energia del sistema
+%% Evoluzione energia del sistema
 E_sist_res=(Epv_out_k-Eload_k-capacity);
-% E_sist_res=E_sist_res(1440,:,:)
-
-%Energia in batteria alla fine della giornata
-% Ebat_end_day = getEBatteryEndDay(Battery,Ebat_k);
-
-
 
 %% Grafici (1) -> Caratteristica ingresso-uscita Potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
 
@@ -553,7 +545,6 @@ figure(10)
 subplot(2,2,1)
 plot(time_minutes,Ebat_k(:,1,1)/1000)
 idx_giorno_apr = interp1(Presiduo_k(1:1:720,1,1),hours(1:1:720),0,'nearest');
-
 time_idx_giorno_apr = datetime(string(datestr(idx_giorno_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
 idx_sera_apr = interp1(Presiduo_k(end:-1:720,1,1),hours(end:-1:720),0,'nearest');
 time_idx_sera_apr = datetime(string(datestr(idx_sera_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
@@ -631,9 +622,9 @@ subplot(2,2,3)
 plot(time_minutes,Ebat_k(:,2,3)/1000)
 idx_giorno_ago = interp1(Presiduo_k(1:1:430,2,3),hours(1:1:430),0,'nearest');
 time_idx_giorno_ago = datetime(string(datestr(idx_giorno_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
-idx_sera_ago = interp1(Presiduo_k(end:-1:780,2,3),hours(end:-1:780),0,'nearest');
-time_idx_sera_ago = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_ago,'-r','Deficit Potenza Residua')
+idx_sera_ago = interp1(Presiduo_k(end:-1:720,2,3),hours(end:-1:720),0,'nearest');
+time_idx_sera_ago_3 = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
+xline(time_idx_sera_ago_3,'-r','Deficit Potenza Residua')
 xline(time_idx_giorno_ago,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Agosto Caso Peggiore')
 xlabel 'ore'
@@ -785,5 +776,95 @@ title('Energia complessiva prodotta a Dicembre')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
 
+%%  Energia Residua in batteria a fine giornata
+figure(15)
 
+X = categorical({'Soleggiato','Nuvoloso','CasoPeggiore'});
+% Aprile
+for i = 1:1:3
+    Ebat_aprile(i) = Ebat_k(1440,1,i)/1000;
+end
+subplot(2,2,1)
+b1 = bar(X, Ebat_aprile);
+b1.FaceColor = 'flat';
+b1.CData(1,:) = [0.85 0.3250 0.0980];
+b1.CData(2,:) = [0 0.4470 0.7410];
+b1.CData(3,:) = [0.92 0.69 0.12];
+title("Energia residua in batteria a fine giornata Aprile")
+
+% Agosto
+for i = 1:1:3
+    Ebat_agosto(i) = Ebat_k(1440,2,i)/1000;
+end
+subplot(2,2,2)
+b2 = bar(X, Ebat_agosto);
+b2.FaceColor = 'flat';
+b2.CData(1,:) = [0.85 0.3250 0.0980];
+b2.CData(2,:) = [0 0.4470 0.7410];
+b2.CData(3,:) = [0.92 0.69 0.12];
+title("Energia residua in batteria a fine giornata Agosto")
+
+% Ottobre
+for i = 1:1:3
+    Ebat_ottobre(i) = Ebat_k(1440,3,i)/1000;
+end
+subplot(2,2,3)
+b3 = bar(X, Ebat_ottobre);
+b3.FaceColor = 'flat';
+b3.CData(1,:) = [0.85 0.3250 0.0980];
+b3.CData(2,:) = [0 0.4470 0.7410];
+b3.CData(3,:) = [0.92 0.69 0.12];
+title("Energia residua in batteria a fine giornata Ottobre")
+
+% Dicembre
+for i = 1:1:3
+    Ebat_dicembre(i) = Ebat_k(1440,4,i)/1000;
+end
+subplot(2,2,4)
+b4 = bar(X, Ebat_dicembre);
+b4.FaceColor = 'flat';
+b4.CData(1,:) = [0.85 0.3250 0.0980];
+b4.CData(2,:) = [0 0.4470 0.7410];
+b4.CData(3,:) = [0.92 0.69 0.12];
+title("Energia residua in batteria a fine giornata Dicembre")
+
+%%  Ore di ricarica richieste dalla batteria
+
+figure(16)
+% Aprile
+X = categorical({'Soleggiato','Nuvoloso','CasoPeggiore'});
+subplot(2,2,1)
+h1 = bar(X,charging_time(1,:));
+h1.FaceColor = 'flat';
+h1.CData(1,:) = [0.85 0.3250 0.0980];
+h1.CData(2,:) = [0 0.4470 0.7410];
+h1.CData(3,:) = [0.92 0.69 0.12];
+title("Ore di ricarica richieste dalla batteria Aprile") 
+
+% Agosto
+subplot(2,2,2)
+h2 = bar(X,charging_time(2,:));
+h2.FaceColor = 'flat';
+h2.CData(1,:) = [0.85 0.3250 0.0980];
+h2.CData(2,:) = [0 0.4470 0.7410];
+h2.CData(3,:) = [0.92 0.69 0.12];
+title("Ore di ricarica richieste dalla batteria Agosto") 
+
+% Ottobre
+subplot(2,2,3)
+h3 = bar(X,charging_time(3,:));
+h3.FaceColor = 'flat';
+h3.CData(1,:) = [0.85 0.3250 0.0980];
+h3.CData(2,:) = [0 0.4470 0.7410];
+h3.CData(3,:) = [0.92 0.69 0.12];
+title("Ore di ricarica richieste dalla batteria Ottobre") 
+
+% Dicembre
+subplot(2,2,4)
+h4 = bar(X,charging_time(4,:));
+h4.FaceColor = 'flat';
+h4.CData(1,:) = [0.85 0.3250 0.0980];
+h4.CData(2,:) = [0 0.4470 0.7410];
+h4.CData(3,:) = [0.92 0.69 0.12];
+title("Ore di ricarica richieste dalla batteria Dicembre") 
 

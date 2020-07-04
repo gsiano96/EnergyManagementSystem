@@ -45,9 +45,15 @@ classdef ACBattery
             
         end
         
-        function time=getTimeToReload(obj,starting_energy,enel_average_power)
-            %starting_energy + enel_average_power * time = capacity
-            time=(obj.capacity-starting_energy)/enel_average_power; %enel average power 50
+        function time_charging=getTimeToReload(obj,enel_average_power,Ebat_k)
+            for i = 1:1:4
+                for j = 1:1:3
+                    %starting_energy + enel_average_power * time = capacity
+                    ending_energy(i,j) = Ebat_k(1440,i,j);
+                    time(i,j)=(obj.capacity - ending_energy(i,j))/enel_average_power; %enel average power 50
+                    time_charging(i,j) = timeofday(datetime(string(datestr(time(i,j)/24,'HH:MM')) ,'InputFormat','HH:mm'));
+                end
+            end
         end
         
 %         function index=getLastStartingDischargingTime(obj,Ebat)
