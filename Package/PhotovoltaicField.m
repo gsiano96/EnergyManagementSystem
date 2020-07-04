@@ -87,7 +87,7 @@ classdef PhotovoltaicField
             end
         end
         
-        function Nmin=optimizePanelsNumber(obj, margin, Pload_med,Ppan_med)
+        function Nmin=optimizePanelsNumber(margin, Pload_med,Ppan_med)
             %N*Ppan-Pload >= soglia
             Nmin=(margin+Pload_med)/Ppan_med;
         end
