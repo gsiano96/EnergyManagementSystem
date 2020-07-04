@@ -156,9 +156,9 @@ Befficiency = 0.98; % Rendimento della Batteria
 
 Battery = SimpleBattery(fullCapacity, dod, P_inv_bat_k, Befficiency);
 
-% Energia carica batteria
+% Energia e Potenza residua batteria
 [Ebat_in_k,Presidual] = batteryEnergy_k(Battery,Presiduo_k,Pload_k);
-% figure(), plot(time_minutes,Ebat_in_k(:,2,1)/1000);
+%figure(), plot(time_minutes,Ebat_in_k(:,2,1)/1000);
 
 %Calcolo delle ore necessarie a caricare la batteria partendo da una
 %capacità residua pari a zero
@@ -179,8 +179,7 @@ Pout_bat=Pload_k;
 
 %Energia erogata dalla batteria compresa di perdite dovute all'inverter interno
 Eout_bat_k=getEoutBattery(Battery,Eload_k,rendimentoInverterBatteria);
-% figure(),plot(time_minutes,Eout_bat_k(:,1,1)/1000);
-% title 'Energia erogabile dalla batteria'
+%figure(),plot(time_minutes,Eout_bat_k(:,1,1)/1000),title 'Energia erogabile dalla batteria'
 
 % Flusso di potenza input/output in uscita/ingresso dall'inverter
 %Presiduo_bat_inverter = Presiduo_k*rendimentoInverterBatteria;
@@ -603,8 +602,8 @@ plot(time_minutes,E_sist_res(:,2,1)/1000)
 idx_giorno_ago = interp1(Presiduo_k(1:1:720,2,1),hours(1:1:720),0,'nearest');
 time_idx_giorno_ago = datetime(string(datestr(idx_giorno_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
 idx_sera_ago = interp1(Presiduo_k(end:-1:720,2,1),hours(end:-1:720),0,'nearest');
-time_idx_sera_ago = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_ago,'-r','Deficit Potenza Residua')
+time_idx_sera_ago_1 = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
+xline(time_idx_sera_ago_1,'-r','Deficit Potenza Residua')
 xline(time_idx_giorno_ago,'-m','Surplus Potenza Residua')
 title('Energia complessiva del sistema Agosto Soleggiato')
 xlabel 'ore'
@@ -618,8 +617,8 @@ plot(time_minutes,E_sist_res(:,2,2)/1000)
 idx_giorno_ago = interp1(Presiduo_k(1:1:720,2,2),hours(1:1:720),0,'nearest');
 time_idx_giorno_ago = datetime(string(datestr(idx_giorno_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
 idx_sera_ago = interp1(Presiduo_k(end:-1:720,2,2),hours(end:-1:720),0,'nearest');
-time_idx_sera_ago = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_ago,'-r','Deficit Potenza Residua')
+time_idx_sera_ago_2 = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
+xline(time_idx_sera_ago_2,'-r','Deficit Potenza Residua')
 xline(time_idx_giorno_ago,'-m','Surplus Potenza Residua')
 title('Energia complessiva del sistema Agosto Nuvoloso')
 xlabel 'ore'
@@ -633,8 +632,8 @@ plot(time_minutes,E_sist_res(:,2,3)/1000)
 idx_giorno_ago = interp1(Presiduo_k(1:1:720,2,3),hours(1:1:720),0,'nearest');
 time_idx_giorno_ago = datetime(string(datestr(idx_giorno_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
 idx_sera_ago = interp1(Presiduo_k(end:-1:720,2,3),hours(end:-1:720),0,'nearest');
-time_idx_sera_ago = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_ago,'-r','Deficit Potenza Residua')
+time_idx_sera_ago_3 = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
+xline(time_idx_sera_ago_3,'-r','Deficit Potenza Residua')
 xline(time_idx_giorno_ago,'-m','Surplus Potenza Residua')
 title('Energia complessiva del sistema Agosto Caso Peggiore')
 xlabel 'ore'
@@ -646,12 +645,12 @@ figure(12)
 %Ottobre Soleggiato
 subplot(2,2,1)
 plot(time_minutes,E_sist_res(:,3,1)/1000)
-idx_giorno_ott = interp1(Presiduo_k(1:1:720,2,1),hours(1:1:720),0,'nearest');
-time_idx_giorno_ott = datetime(string(datestr(idx_giorno_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
+idx_giorno_ott = interp1(Presiduo_k(280:1:720,2,1),hours(280:1:720),0,'spline');
+time_idx_giorno_ott_1 = datetime(string(datestr((idx_giorno_ott+0.7)/24,'HH:MM')) ,'InputFormat','HH:mm');
 idx_sera_ott = interp1(Presiduo_k(end:-1:720,3,1),hours(end:-1:720),0,'nearest');
 time_idx_sera_ott = datetime(string(datestr(idx_sera_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
 xline(time_idx_sera_ott,'-r','Deficit Potenza Residua')
-xline(time_idx_giorno_ott,'-m','Surplus Potenza Residua')
+xline(time_idx_giorno_ott_1,'-m','Surplus Potenza Residua')
 title('Energia complessiva del sistema Ottobre Soleggiato')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
