@@ -1,5 +1,5 @@
 %% - Operazioni di Pulizia -
-clear all; 
+clear all;
 clc; 
 close all;
 
@@ -66,7 +66,7 @@ for j=1:1:4
 end
 
 %% - Interpolazione fino a 1440 punti valore -
-T_k=interp1(time_hours,T_k,time_minutes,'spline');
+T_k = interp1(time_hours,T_k,time_minutes,'spline');
 
 %% - Campo fotovoltaico -
 Pnom = 327; %[W]
@@ -81,18 +81,17 @@ NOCT = 45;
 
 %% Carico
 Pload_k=vector(:,2)*1000; %W 
-Pload_med = mean(Pload_k)
+Pload_med = mean(Pload_k);
 carico=Load(Pload_k);
 
 %Energia assorbita dal carico
-Eload_k=cumtrapz(0.0167,Pload_k);
+Eload_k = cumtrapz(0.0167,Pload_k);
 
-% figure(),plot(time_minutes,Eload_k(:)/1000);
-% title 'Energia assorbita dal carico'
+% figure(),plot(time_minutes,Eload_k(:)/1000),title 'Energia assorbita dal carico'
 
 %% Ottimizzazione numero di Pannelli
 margin = 1e+04; %[W]
-Nmin_pannelli = ceil((margin+Pload_med)/Pnom)
+Nmin_pannelli = ceil((margin+Pload_med)/Pnom);
 
 PvField=PhotovoltaicField(Nmin_pannelli,Pnom,Vpanel_mpp,panelPowerTemperatureCoefficient,...
     panelVoltageTemperatureCoefficient,seriesPanelsNumber,parallelsPanelsNumber,NOCT);
@@ -109,18 +108,19 @@ Prel_k=[0;Prel_k];
 efficiency_k=[0;efficiency_k];
 
 % ATTENZIONE OTTIMIZZAZIONE INVERTER
-Pindcmax = 66*1e3;  %nominal P DC
-Poutacmax = 50*1e3; %max P AC 
+Pindcmax = 33*1e3;  %nominal P DC
+Poutacmax = 25*1e3; %max P AC 
 
 inputVoltageInterval = [430,900];
 outputVoltageInterval = 400; 
 phasesNumber = 3; % trifase
 
 Inverter = Solarmaxinverter(Prel_k,efficiency_k,Pindcmax,Poutacmax, inputVoltageInterval, outputVoltageInterval, phasesNumber);
+
 %potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
 [Pin_inv_k,Pout_inv_k] = getCharacteristicPout_Pin(Inverter,true);
-% Interpolazione dei punti dell'asse Pinput corrispondenti a Ppv
 
+% Interpolazione dei punti dell'asse Pinput corrispondenti a Ppv
 Ppv_out_k = interpolateInputPowerPoints(Inverter ,Ppv_k_scaled,'spline');
 
 % Percentuali di interesse in input all'inverter
@@ -161,20 +161,20 @@ P_bat_k = Pmax_erogabile * 12; %W
 %all'effcienza dell'inverter del fotovoltaico.
 Befficiency = 0.95; % Rendimento della Batteria
 
-Battery = DCBattery(capacity, dod,P_bat_k,Befficiency)
+Battery = DCBattery(capacity, dod,P_bat_k,Befficiency);
 
 %Lato DC
-P_bat= filterPower(Battery,Presiduo_k)
+P_bat = filterPower(Battery,Presiduo_k);
 Ebat_k = batteryEnergy_k(Battery,P_bat);
-%Potenza in uscita dall'inverter
 
+%Potenza in uscita dall'inverter
 Prel_bat=abs(P_bat)/Pindcmax;
-IEff=interp1(Prel_k,efficiency_k,Prel_bat,'spline')
+IEff = interp1(Prel_k,efficiency_k,Prel_bat,'spline');
 
 
 for j=1:1:4
     for k=1:1:3
-        [Pbat_carica(:,j,k),Pbat_scarica(:,j,k)] = decouplePowerBattery(Battery,P_bat(:,j,k))
+        [Pbat_carica(:,j,k),Pbat_scarica(:,j,k)] = decouplePowerBattery(Battery,P_bat(:,j,k));
     end
 end
 
@@ -183,9 +183,8 @@ med_targetPrelbat=getMeanTarget(Inverter,Pbat_scarica,Pindcmax); % media
 max_targetPrelbat=getMaxTarget(Inverter,Pbat_scarica,Pindcmax); % massimo
 
 
-
 Pbat_out_k = interpolateInputPowerPoints(Inverter ,Pbat_scarica,'spline');
-figure(), plot(time_minutes,Pbat_out_k(:,2,1)/1000);
+%figure(), plot(time_minutes,Pbat_out_k(:,2,1)/1000);
 
 %% Calcolo delle ore necessarie a caricare la batteria partendo da una
 % capacità residua pari a zero
@@ -215,25 +214,24 @@ E_sist_res=(Epv_out_k-Eload_k-capacity);
 
 figure(1)
 
-subplot(2,2,1)
+subplot(2,1,1)
 plot(Pin_inv_k/1000,Pout_inv_k/1000);
 title("Caratteristica ingresso-uscita potenza PV tenendo conto dell'efficienza dell'inverter e temperatura") 
 xlabel 'Pinput [kw]'
 ylabel 'Pout [kw]'
-axis ([0 140 0 140])
 
-subplot(2,2,2)
+subplot(2,1,2)
 plot(Prel_k,efficiency_k);
 title("Caratteristica efficienza inverter") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
 
-
 % subplot(2,2,3)
-% plot(Pinbat_inv_k/1000,Poutbat_inv_k/1000);
-% title("Caratteristica ingresso-uscita potenza batteria-inverter") 
-% xlabel 'Prel [%]'
-% ylabel 'Rendimento [%]'
+% plot(Pbat_carica(:,1,1)/1000,Pbat_scarica(:,1,1)/1000);
+% title("Caratteristica ingresso-uscita potenza Batteria tenendo conto dell'efficienza dell'inverter") 
+% xlabel 'Pinput [kw]'
+% ylabel 'Pout [kw]'
+
 %% Grafici (2) -> Valori medi di lavoro nella regione di efficienza dell'inverter fotovoltaico
 
 figure(2)
@@ -245,7 +243,7 @@ xline(max_targetPrel(1,1,1)*100,'-r',max_targetPrel(1,1,1)*100);
 title("Caratteristica efficienza inverter Aprile Soleggiato") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
-axis ([0 130 0 100])
+
 %Aprile Nuvoloso 
 subplot(2,2,2)
 plot(Prel_k*100,efficiency_k*100)
@@ -254,7 +252,7 @@ xline(max_targetPrel(1,1,2)*100,'-r',max_targetPrel(1,1,2)*100);
 title("Caratteristica efficienza inverter Nuvoloso") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
-axis ([0 120 0 100])
+
 %Aprile Caso peggiore
 subplot(2,2,3)
 plot(Prel_k*100,efficiency_k*100)
@@ -263,7 +261,7 @@ xline(max_targetPrel(1,1,3)*100,'-r',max_targetPrel(1,1,3)*100);
 title("Caratteristica efficienza inverter Caso peggiore") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
-axis ([0 120 0 100])
+
 
 figure(3)
 %Agosto Soleggiato
@@ -274,7 +272,7 @@ xline(max_targetPrel(1,2,1)*100,'-r',max_targetPrel(1,2,1)*100);
 title("Caratteristica efficienza inverter Agosto Soleggiato") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
-axis ([0 120 0 100])
+
 %Agosto Nuvoloso 
 subplot(2,2,2)
 plot(Prel_k*100,efficiency_k*100)
@@ -283,7 +281,7 @@ xline(max_targetPrel(1,2,2)*100,'-r',max_targetPrel(1,2,2)*100);
 title("Caratteristica efficienza inverter Agosto Nuvoloso") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
-axis ([0 120 0 100])
+
 %Agosto Caso peggiore
 subplot(2,2,3)
 plot(Prel_k*100,efficiency_k*100)
@@ -292,7 +290,7 @@ xline(max_targetPrel(1,2,3)*100,'-r',max_targetPrel(1,2,3)*100);
 title("Caratteristica efficienza inverter Agosto Caso peggiore") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
-axis ([0 120 0 100])
+
 
 figure(4)
 %Ottobre Soleggiato
@@ -303,7 +301,7 @@ xline(max_targetPrel(1,3,1)*100,'-r',max_targetPrel(1,3,1)*100);
 title("Caratteristica efficienza inverter Ottobre Soleggiato") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
-axis ([0 120 0 100])
+
 %Ottobre Nuvoloso 
 subplot(2,2,2)
 plot(Prel_k*100,efficiency_k*100)
@@ -312,7 +310,7 @@ xline(max_targetPrel(1,3,2)*100,'-r',max_targetPrel(1,3,2)*100);
 title("Caratteristica efficienza inverter Ottobre Nuvoloso") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
-axis ([0 120 0 100])
+
 %Ottobre Caso peggiore
 subplot(2,2,3)
 plot(Prel_k*100,efficiency_k*100)
@@ -321,7 +319,7 @@ xline(max_targetPrel(1,3,3)*100,'-r',max_targetPrel(1,3,3)*100);
 title("Caratteristica efficienza inverter Ottobre Caso peggiore") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
-axis ([0 120 0 100])
+
 
 figure(5)
 %Dicembre Soleggiato
@@ -332,7 +330,7 @@ xline(max_targetPrel(1,4,1)*100,'-r',max_targetPrel(1,4,1)*100);
 title("Caratteristica efficienza inverter Dicembre Soleggiato") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
-axis ([0 120 0 100])
+
 %Dicembre Nuvoloso 
 subplot(2,2,2)
 plot(Prel_k*100,efficiency_k*100)
@@ -341,7 +339,7 @@ xline(max_targetPrel(1,4,2)*100,'-r',max_targetPrel(1,4,2)*100);
 title("Caratteristica efficienza inverter Dicembre Nuvoloso") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
-axis ([0 120 0 100])
+
 %Dicembre Caso peggiore
 subplot(2,2,3)
 plot(Prel_k*100,efficiency_k*100)
@@ -350,7 +348,7 @@ xline(max_targetPrel(1,4,3)*100,'-r',max_targetPrel(1,4,3)*100);
 title("Caratteristica efficienza inverter Dicembre Caso peggiore") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
-axis ([0 120 0 100])
+
 
 %% Grafici (3) -> Valori medi di lavoro nella regione di efficienza dell'inverter fotovoltaico Batteria
 
@@ -362,98 +360,12 @@ xline(max(max_targetPrelbat(:))*100,'-r',max(max_targetPrelbat(:))*100);
 title("Caratteristica efficienza inverter-batteria Aprile") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
-axis ([0 130 0 100])
 
 
-% figure(7)
-% %Agosto Soleggiato
-% subplot(2,2,1)
-% plot(Prel_k*100,efficiency_k*100)
-% xline(med_targetPrelbat(1,2,1)*100,'-g',med_targetPrelbat(1,2,1)*100);
-% xline(max_targetPrelbat(1,2,1)*100,'-r',max_targetPrelbat(1,2,1)*100);
-% title("Caratteristica efficienza inverter Agosto Soleggiato") 
-% xlabel 'Prel [%]'
-% ylabel 'Rendimento [%]'
-% axis ([0 120 0 100])
-% %Agosto Nuvoloso 
-% subplot(2,2,2)
-% plot(Prel_k*100,efficiency_k*100)
-% xline(med_targetPrelbat(1,2,2)*100,'-g',med_targetPrelbat(1,2,2)*100);
-% xline(max_targetPrelbat(1,2,2)*100,'-r',max_targetPrelbat(1,2,2)*100);
-% title("Caratteristica efficienza inverter Agosto Nuvoloso") 
-% xlabel 'Prel [%]'
-% ylabel 'Rendimento [%]'
-% axis ([0 120 0 100])
-% %Agosto Caso peggiore
-% subplot(2,2,3)
-% plot(Prel_k*100,efficiency_k*100)
-% xline(med_targetPrelbat(1,2,3)*100,'-g',med_targetPrelbat(1,2,3)*100);
-% xline(max_targetPrelbat(1,2,3)*100,'-r',max_targetPrelbat(1,2,3)*100);
-% title("Caratteristica efficienza inverter Agosto Caso peggiore") 
-% xlabel 'Prel [%]'
-% ylabel 'Rendimento [%]'
-% axis ([0 120 0 100])
-% 
-% figure(8)
-% %Ottobre Soleggiato
-% subplot(2,2,1)
-% plot(Prel_k*100,efficiency_k*100)
-% xline(med_targetPrelbat(1,3,1)*100,'-g',med_targetPrelbat(1,3,1)*100);
-% xline(max_targetPrelbat(1,3,1)*100,'-r',max_targetPrelbat(1,3,1)*100);
-% title("Caratteristica efficienza inverter Ottobre Soleggiato") 
-% xlabel 'Prel [%]'
-% ylabel 'Rendimento [%]'
-% axis ([0 120 0 100])
-% %Ottobre Nuvoloso 
-% subplot(2,2,2)
-% plot(Prel_k*100,efficiency_k*100)
-% xline(med_targetPrelbat(1,3,2)*100,'-g',med_targetPrelbat(1,3,2)*100);
-% xline(max_targetPrelbat(1,3,2)*100,'-r',max_targetPrelbat(1,3,2)*100);
-% title("Caratteristica efficienza inverter Ottobre Nuvoloso") 
-% xlabel 'Prel [%]'
-% ylabel 'Rendimento [%]'
-% axis ([0 120 0 100])
-% %Ottobre Caso peggiore
-% subplot(2,2,3)
-% plot(Prel_k*100,efficiency_k*100)
-% xline(med_targetPrelbat(1,3,3)*100,'-g',med_targetPrelbat(1,3,3)*100);
-% xline(max_targetPrelbat(1,3,3)*100,'-r',max_targetPrelbat(1,3,3)*100);
-% title("Caratteristica efficienza inverter Ottobre Caso peggiore") 
-% xlabel 'Prel [%]'
-% ylabel 'Rendimento [%]'
-% axis ([0 120 0 100])
-% 
-% figure(9)
-% %Dicembre Soleggiato
-% subplot(2,2,1)
-% plot(Prel_k*100,efficiency_k*100)
-% xline(med_targetPrelbat(1,4,1)*100,'-g',med_targetPrelbat(1,4,1)*100);
-% xline(max_targetPrelbat(1,4,1)*100,'-r',max_targetPrelbat(1,4,1)*100);
-% title("Caratteristica efficienza inverter Dicembre Soleggiato") 
-% xlabel 'Prel [%]'
-% ylabel 'Rendimento [%]'
-% axis ([0 120 0 100])
-% %Dicembre Nuvoloso 
-% subplot(2,2,2)
-% plot(Prel_k*100,efficiency_k*100)
-% xline(med_targetPrelbat(1,4,2)*100,'-g',med_targetPrelbat(1,4,2)*100);
-% xline(max_targetPrelbat(1,4,2)*100,'-r',max_targetPrelbat(1,4,2)*100);
-% title("Caratteristica efficienza inverter Dicembre Nuvoloso") 
-% xlabel 'Prel [%]'
-% ylabel 'Rendimento [%]'
-% axis ([0 120 0 100])
-% %Dicembre Caso peggiore
-% subplot(2,2,3)
-% plot(Prel_k*100,efficiency_k*100)
-% xline(med_targetPrelbat(1,4,3)*100,'-g',med_targetPrelbat(1,4,3)*100);
-% xline(max_targetPrelbat(1,4,3)*100,'-r',max_targetPrelbat(1,4,3)*100);
-% title("Caratteristica efficienza inverter Dicembre Caso peggiore") 
-% xlabel 'Prel [%]'
-% ylabel 'Rendimento [%]'
-% axis ([0 120 0 100])
-%% Grafici (2) -> Potenze fotovoltaico - potenze in uscita dall'inverter
 
-figure(10)
+%% Grafici (4) -> Potenze fotovoltaico - potenze in uscita dall'inverter
+
+figure(7)
 
 % Dicembre
 subplot(2,2,1)
@@ -476,7 +388,7 @@ legend('soleggiato','nuvoloso','caso peggiore');
 xlabel 'Ppv_k_scaled(k) [Kw]'
 ylabel 'Ppv-out(k) [Kw]'
 title("Potenza del fotovoltaico in uscita dall'inverter Aprile")
-axis ([0 140 0 140])
+
 
 % Agosto
 subplot(2,2,3)
@@ -488,7 +400,7 @@ legend('soleggiato','nuvoloso','caso peggiore');
 xlabel 'Ppv_k_scaled(k) [Kw]'
 ylabel 'Ppv-out(k) [Kw]'
 title("Potenza del fotovoltaico in uscita dall'inverter Agosto")
-axis ([0 140 0 140])
+
 
 % Ottobre
 subplot(2,2,4)
@@ -501,9 +413,9 @@ xlabel 'Ppv_k_scaled(k) [Kw]'
 ylabel 'Ppv-out(k) [Kw]'
 title("Potenza del fotovoltaico in uscita dall'inverter Ottobre")
 
-%% Grafici (3) -> Grafici potenze fotovoltaico per tutti i mesi e casi
+%% Grafici (5) -> Grafici potenze fotovoltaico per tutti i mesi e casi
 
-figure(11)
+figure(8)
 %Aprile
 subplot(2,2,1)
 for i=1:1:3
@@ -552,9 +464,9 @@ xlabel 'time'
 ylabel 'Ppv(k) [Kw]'
 title 'Dicembre'
 
-%% Grafici (4) -> Effetto di scalatura della potenza dovuto alla temperatura
+%% Grafici (6) -> Effetto di scalatura della potenza dovuto alla temperatura
 
-figure(12)
+figure(9)
 % Aprile
 subplot(2,2,1)
 plot(time_minutes,Ppv_k(:,1,1)/1000);
@@ -599,9 +511,9 @@ ylabel 'Ppv(k)'
 % non risentono dell'effetto di scalatura della potenza dovuto
 % alla temperatura, essendo questa al di sotto di 25°C
 
-%% Grafici (5) -> Potenze Residue e di Carico per tutti i mesi e casi
+%% Grafici (7) -> Potenze Residue e di Carico per tutti i mesi e casi
 
-figure(13)
+figure(10)
 % Aprile
 subplot(2,2,1)
 for i=1:1:3
@@ -671,18 +583,18 @@ xlabel 'ore'
 ylabel 'Potenze [Kw]'
 
 
-%% Evoluzione energetica del sistema 
+%% Grafici (8) -> Evoluzione energetica della Batteria 
 
-figure(14)
+figure(11)
 %Aprile Soleggiato
 subplot(2,2,1)
 plot(time_minutes,Ebat_k(:,1,1)/1000)
-idx_giorno_apr = interp1(Presiduo_k(1:1:720,1,1),hours(1:1:720),0,'nearest');
-time_idx_giorno_apr = datetime(string(datestr(idx_giorno_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
-idx_sera_apr = interp1(Presiduo_k(end:-1:720,1,1),hours(end:-1:720),0,'nearest');
-time_idx_sera_apr = datetime(string(datestr(idx_sera_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_apr,'-r','Deficit Potenza Residua')
-xline(time_idx_giorno_apr,'-m','Surplus Potenza Residua')
+% idx_giorno_apr = interp1(Presiduo_k(1:1:720,1,1),hours(1:1:720),0,'nearest');
+% time_idx_giorno_apr = datetime(string(datestr(idx_giorno_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
+% idx_sera_apr = interp1(Presiduo_k(end:-1:720,1,1),hours(end:-1:720),0,'nearest');
+% time_idx_sera_apr = datetime(string(datestr(idx_sera_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
+% xline(time_idx_sera_apr,'-r','Deficit Potenza Residua')
+% xline(time_idx_giorno_apr,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Aprile Soleggiato')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
@@ -692,12 +604,12 @@ yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 %Aprile Nuvoloso 
 subplot(2,2,2)
 plot(time_minutes,Ebat_k(:,1,2)/1000)
-idx_giorno_apr = interp1(Presiduo_k(1:1:720,1,2),hours(1:1:720),0,'nearest');
-time_idx_giorno_apr = datetime(string(datestr(idx_giorno_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
-idx_sera_apr = interp1(Presiduo_k(end:-1:720,1,2),hours(end:-1:720),0,'nearest');
-time_idx_sera_apr = datetime(string(datestr(idx_sera_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_apr,'-r','Deficit Potenza Residua')
-xline(time_idx_giorno_apr,'-m','Surplus Potenza Residua')
+% idx_giorno_apr = interp1(Presiduo_k(1:1:720,1,2),hours(1:1:720),0,'nearest');
+% time_idx_giorno_apr = datetime(string(datestr(idx_giorno_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
+% idx_sera_apr = interp1(Presiduo_k(end:-1:720,1,2),hours(end:-1:720),0,'nearest');
+% time_idx_sera_apr = datetime(string(datestr(idx_sera_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
+% xline(time_idx_sera_apr,'-r','Deficit Potenza Residua')
+% xline(time_idx_giorno_apr,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Aprile Nuvoloso')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
@@ -707,28 +619,33 @@ yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 %Aprile Caso peggiore
 subplot(2,2,3)
 plot(time_minutes,Ebat_k(:,1,3)/1000)
-idx_giorno_apr = interp1(Presiduo_k(1:1:430,1,3),hours(1:1:430),0,'nearest');
-time_idx_giorno_apr = datetime(string(datestr(idx_giorno_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
-idx_sera_apr = interp1(Presiduo_k(end:-1:720,1,3),hours(end:-1:720),0,'nearest');
-time_idx_sera_apr = datetime(string(datestr(idx_sera_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_apr,'-r','Deficit Potenza Residua')
-xline(time_idx_giorno_apr,'-m','Surplus Potenza Residua')
+% if(Presiduo_k(1:1:430,1,3) > 0)
+%     idx_giorno_apr = interp1(Presiduo_k(1:1:430,1,3),hours(1:1:430),0,'nearest');
+%     time_idx_giorno_apr = datetime(string(datestr(idx_giorno_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
+%     idx_sera_apr = interp1(Presiduo_k(end:-1:720,1,3),hours(end:-1:720),0,'nearest');
+%     time_idx_sera_apr = datetime(string(datestr(idx_sera_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
+% else
+%     time_idx_giorno_apr = datetime(string(datestr(0/24,'HH:MM')) ,'InputFormat','HH:mm');
+%     time_idx_sera_apr = datetime(string(datestr(0/24,'HH:MM')) ,'InputFormat','HH:mm');
+% end
+% xline(time_idx_sera_apr,'-r','Deficit Potenza Residua')
+% xline(time_idx_giorno_apr,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Aprile Caso Peggiore')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
 yline(fullCapacity/1000,'-r','CapacitàBatteria = 210 KWh');
 yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 
-figure(15)
+figure(12)
 %Agosto Soleggiato
 subplot(2,2,1)
 plot(time_minutes,Ebat_k(:,2,1)/1000)
-idx_giorno_ago = interp1(Presiduo_k(1:1:340,2,1),hours(1:1:340),0,'nearest');
-time_idx_giorno_ago = datetime(string(datestr(idx_giorno_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
-idx_sera_ago = interp1(Presiduo_k(end:-1:720,2,1),hours(end:-1:720),0,'nearest');
-time_idx_sera_ago = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_ago,'-r','Deficit Potenza Residua')
-xline(time_idx_giorno_ago,'-m','Surplus Potenza Residua')
+% idx_giorno_ago = interp1(Presiduo_k(1:1:340,2,1),hours(1:1:340),0,'nearest');
+% time_idx_giorno_ago = datetime(string(datestr(idx_giorno_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
+% idx_sera_ago = interp1(Presiduo_k(end:-1:720,2,1),hours(end:-1:720),0,'nearest');
+% time_idx_sera_ago = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
+% xline(time_idx_sera_ago,'-r','Deficit Potenza Residua')
+% xline(time_idx_giorno_ago,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Agosto Soleggiato')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
@@ -738,12 +655,12 @@ yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 %Agosto Nuvoloso 
 subplot(2,2,2)
 plot(time_minutes,Ebat_k(:,2,2)/1000)
-idx_giorno_ago = interp1(Presiduo_k(1:1:720,2,2),hours(1:1:720),0,'nearest');
-time_idx_giorno_ago = datetime(string(datestr(idx_giorno_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
-idx_sera_ago = interp1(Presiduo_k(end:-1:720,2,2),hours(end:-1:720),0,'nearest');
-time_idx_sera_ago = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_ago,'-r','Deficit Potenza Residua')
-xline(time_idx_giorno_ago,'-m','Surplus Potenza Residua')
+% idx_giorno_ago = interp1(Presiduo_k(1:1:720,2,2),hours(1:1:720),0,'nearest');
+% time_idx_giorno_ago = datetime(string(datestr(idx_giorno_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
+% idx_sera_ago = interp1(Presiduo_k(end:-1:720,2,2),hours(end:-1:720),0,'nearest');
+% time_idx_sera_ago = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
+% xline(time_idx_sera_ago,'-r','Deficit Potenza Residua')
+% xline(time_idx_giorno_ago,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Agosto Nuvoloso')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
@@ -753,28 +670,28 @@ yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 %Agosto Caso peggiore
 subplot(2,2,3)
 plot(time_minutes,Ebat_k(:,2,3)/1000)
-idx_giorno_ago = interp1(Presiduo_k(1:1:430,2,3),hours(1:1:430),0,'nearest');
-time_idx_giorno_ago = datetime(string(datestr(idx_giorno_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
-idx_sera_ago = interp1(Presiduo_k(end:-1:720,2,3),hours(end:-1:720),0,'nearest');
-time_idx_sera_ago_3 = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_ago_3,'-r','Deficit Potenza Residua')
-xline(time_idx_giorno_ago,'-m','Surplus Potenza Residua')
+% idx_giorno_ago = interp1(Presiduo_k(1:1:430,2,3),hours(1:1:430),0,'nearest');
+% time_idx_giorno_ago = datetime(string(datestr(idx_giorno_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
+% idx_sera_ago = interp1(Presiduo_k(end:-1:720,2,3),hours(end:-1:720),0,'nearest');
+% time_idx_sera_ago_3 = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
+% xline(time_idx_sera_ago_3,'-r','Deficit Potenza Residua')
+% xline(time_idx_giorno_ago,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Agosto Caso Peggiore')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
 yline(fullCapacity/1000,'-r','CapacitàBatteria = 210 KWh');
 yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 
-figure(16)
+figure(13)
 %Ottobre Soleggiato
 subplot(2,2,1)
 plot(time_minutes,Ebat_k(:,3,1)/1000)
-idx_giorno_ott = interp1(Presiduo_k(1:1:720,2,1),hours(1:1:720),0,'nearest');
-time_idx_giorno_ott = datetime(string(datestr((idx_giorno_ott+0.7)/24,'HH:MM')) ,'InputFormat','HH:mm');
-idx_sera_ott = interp1(Presiduo_k(end:-1:720,3,1),hours(end:-1:720),0,'nearest');
-time_idx_sera_ott = datetime(string(datestr(idx_sera_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_ott,'-r','Deficit Potenza Residua')
-xline(time_idx_giorno_ott,'-m','Surplus Potenza Residua')
+% idx_giorno_ott = interp1(Presiduo_k(1:1:720,2,1),hours(1:1:720),0,'nearest');
+% time_idx_giorno_ott = datetime(string(datestr((idx_giorno_ott+0.7)/24,'HH:MM')) ,'InputFormat','HH:mm');
+% idx_sera_ott = interp1(Presiduo_k(end:-1:720,3,1),hours(end:-1:720),0,'nearest');
+% time_idx_sera_ott = datetime(string(datestr(idx_sera_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
+% xline(time_idx_sera_ott,'-r','Deficit Potenza Residua')
+% xline(time_idx_giorno_ott,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Ottobre Soleggiato')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
@@ -784,12 +701,12 @@ yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 %Ottobre Nuvoloso 
 subplot(2,2,2)
 plot(time_minutes,Ebat_k(:,3,2)/1000)
-idx_giorno_ott = interp1(Presiduo_k(1:1:720,3,2),hours(1:1:720),0,'nearest');
-time_idx_giorno_ott = datetime(string(datestr(idx_giorno_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
-idx_sera_ott = interp1(Presiduo_k(end:-1:720,3,2),hours(end:-1:720),0,'nearest');
-time_idx_sera_ott = datetime(string(datestr(idx_sera_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_ott,'-r','Deficit Potenza Residua')
-xline(time_idx_giorno_ott,'-m','Surplus Potenza Residua')
+% idx_giorno_ott = interp1(Presiduo_k(1:1:720,3,2),hours(1:1:720),0,'nearest');
+% time_idx_giorno_ott = datetime(string(datestr(idx_giorno_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
+% idx_sera_ott = interp1(Presiduo_k(end:-1:720,3,2),hours(end:-1:720),0,'nearest');
+% time_idx_sera_ott = datetime(string(datestr(idx_sera_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
+% xline(time_idx_sera_ott,'-r','Deficit Potenza Residua')
+% xline(time_idx_giorno_ott,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Ottobre Nuvoloso')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
@@ -799,28 +716,28 @@ yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 %Ottobre Caso peggiore
 subplot(2,2,3)
 plot(time_minutes,Ebat_k(:,3,3)/1000)
-idx_giorno_ott = interp1(Presiduo_k(1:1:430,3,3),hours(1:1:430),0,'nearest');
-time_idx_giorno_ott = datetime(string(datestr(idx_giorno_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
-idx_sera_ott = interp1(Presiduo_k(end:-1:720,3,3),hours(end:-1:720),0,'nearest');
-time_idx_sera_ott = datetime(string(datestr(idx_sera_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_ott,'-r','Deficit Potenza Residua')
-xline(time_idx_giorno_ott,'-m','Surplus Potenza Residua')
+% idx_giorno_ott = interp1(Presiduo_k(1:1:430,3,3),hours(1:1:430),0,'nearest');
+% time_idx_giorno_ott = datetime(string(datestr(idx_giorno_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
+% idx_sera_ott = interp1(Presiduo_k(end:-1:720,3,3),hours(end:-1:720),0,'nearest');
+% time_idx_sera_ott = datetime(string(datestr(idx_sera_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
+% xline(time_idx_sera_ott,'-r','Deficit Potenza Residua')
+% xline(time_idx_giorno_ott,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Ottobre Caso Peggiore')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
 yline(fullCapacity/1000,'-r','CapacitàBatteria = 210 KWh');
 yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 
-figure(13)
+figure(14)
 %Dicembre Soleggiato
 subplot(2,2,1)
 plot(time_minutes,Ebat_k(:,4,1)/1000)
-idx_giorno_dic = interp1(Presiduo_k(1:1:720,4,1),hours(1:1:720),0,'nearest');
-time_idx_giorno_dic = datetime(string(datestr(idx_giorno_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
-idx_sera_dic = interp1(Presiduo_k(end:-1:720,4,1),hours(end:-1:720),0,'nearest');
-time_idx_sera_dic = datetime(string(datestr(idx_sera_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_dic,'-r','Deficit Potenza Residua')
-xline(time_idx_giorno_dic,'-m','Surplus Potenza Residua')
+% idx_giorno_dic = interp1(Presiduo_k(1:1:720,4,1),hours(1:1:720),0,'nearest');
+% time_idx_giorno_dic = datetime(string(datestr(idx_giorno_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
+% idx_sera_dic = interp1(Presiduo_k(end:-1:720,4,1),hours(end:-1:720),0,'nearest');
+% time_idx_sera_dic = datetime(string(datestr(idx_sera_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
+% xline(time_idx_sera_dic,'-r','Deficit Potenza Residua')
+% xline(time_idx_giorno_dic,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Dicembre Soleggiato')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
@@ -830,12 +747,12 @@ yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 %Dicembre Nuvoloso 
 subplot(2,2,2)
 plot(time_minutes,Ebat_k(:,4,2)/1000)
-idx_giorno_dic = interp1(Presiduo_k(1:1:720,4,2),hours(1:1:720),0,'nearest');
-time_idx_giorno_dic = datetime(string(datestr(idx_giorno_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
-idx_sera_dic = interp1(Presiduo_k(end:-1:720,4,2),hours(end:-1:720),0,'nearest');
-time_idx_sera_dic = datetime(string(datestr(idx_sera_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_dic,'-r','Deficit Potenza Residua')
-xline(time_idx_giorno_dic,'-m','Surplus Potenza Residua')
+% idx_giorno_dic = interp1(Presiduo_k(1:1:720,4,2),hours(1:1:720),0,'nearest');
+% time_idx_giorno_dic = datetime(string(datestr(idx_giorno_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
+% idx_sera_dic = interp1(Presiduo_k(end:-1:720,4,2),hours(end:-1:720),0,'nearest');
+% time_idx_sera_dic = datetime(string(datestr(idx_sera_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
+% xline(time_idx_sera_dic,'-r','Deficit Potenza Residua')
+% xline(time_idx_giorno_dic,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Dicembre Nuvoloso')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
@@ -845,20 +762,20 @@ yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 %Dicembre Caso peggiore
 subplot(2,2,3)
 plot(time_minutes,Ebat_k(:,4,3)/1000)
-idx_giorno_dic = interp1(Presiduo_k(1:1:480,4,3),hours(1:1:480),0,'nearest');
-time_idx_giorno_dic = datetime(string(datestr(idx_giorno_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
-idx_sera_dic = interp1(Presiduo_k(end:-1:720,4,3),hours(end:-1:720),0,'nearest');
-time_idx_sera_dic = datetime(string(datestr(idx_sera_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
-xline(time_idx_sera_dic,'-r','Deficit Potenza Residua')
-xline(time_idx_giorno_dic,'-m','Surplus Potenza Residua')
+% idx_giorno_dic = interp1(Presiduo_k(1:1:480,4,3),hours(1:1:480),0,'nearest');
+% time_idx_giorno_dic = datetime(string(datestr(idx_giorno_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
+% idx_sera_dic = interp1(Presiduo_k(end:-1:720,4,3),hours(end:-1:720),0,'nearest');
+% time_idx_sera_dic = datetime(string(datestr(idx_sera_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
+% xline(time_idx_sera_dic,'-r','Deficit Potenza Residua')
+% xline(time_idx_giorno_dic,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Dicembre Caso Peggiore')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
 yline(fullCapacity/1000,'-r','CapacitàBatteria = 210 KWh');
 yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 
-%% Evoluzione energetica del sistema
-figure(17)
+%% Grafici (7) ->  Evoluzione energetica del sistema
+figure(15)
 
 % Aprile
 subplot(2,2,1)
@@ -909,5 +826,55 @@ title('Energia complessiva prodotta a Dicembre')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
 
+%% Grafici (8) -> Energia Residua in batteria a fine giornata
+figure(16)
 
+X = categorical({'Soleggiato','Nuvoloso','CasoPeggiore'});
+% Aprile
+for i = 1:1:3
+    Ebat_aprile(i) = Ebat_k(1440,1,i)/1000;
+end
+subplot(2,2,1)
+b1 = bar(X, Ebat_aprile);
+b1.FaceColor = 'flat';
+b1.CData(1,:) = [0.85 0.3250 0.0980];
+b1.CData(2,:) = [0 0.4470 0.7410];
+b1.CData(3,:) = [0.92 0.69 0.12];
+title("Energia residua in batteria a fine giornata Aprile")
+
+% Agosto
+for i = 1:1:3
+    Ebat_agosto(i) = Ebat_k(1440,2,i)/1000;
+end
+subplot(2,2,2)
+b2 = bar(X, Ebat_agosto);
+b2.FaceColor = 'flat';
+b2.CData(1,:) = [0.85 0.3250 0.0980];
+b2.CData(2,:) = [0 0.4470 0.7410];
+b2.CData(3,:) = [0.92 0.69 0.12];
+title("Energia residua in batteria a fine giornata Agosto")
+
+% Ottobre
+for i = 1:1:3
+    Ebat_ottobre(i) = Ebat_k(1440,3,i)/1000;
+end
+subplot(2,2,3)
+b3 = bar(X, Ebat_ottobre);
+b3.FaceColor = 'flat';
+b3.CData(1,:) = [0.85 0.3250 0.0980];
+b3.CData(2,:) = [0 0.4470 0.7410];
+b3.CData(3,:) = [0.92 0.69 0.12];
+title("Energia residua in batteria a fine giornata Ottobre")
+
+% Dicembre
+for i = 1:1:3
+    Ebat_dicembre(i) = Ebat_k(1440,4,i)/1000;
+end
+subplot(2,2,4)
+b4 = bar(X, Ebat_dicembre);
+b4.FaceColor = 'flat';
+b4.CData(1,:) = [0.85 0.3250 0.0980];
+b4.CData(2,:) = [0 0.4470 0.7410];
+b4.CData(3,:) = [0.92 0.69 0.12];
+title("Energia residua in batteria a fine giornata Dicembre")
 

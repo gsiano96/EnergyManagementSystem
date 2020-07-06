@@ -125,8 +125,7 @@ carico=Load(Pload_k);
 %Energia assorbita dal carico
 Eload_k=cumtrapz(0.0167,Pload_k);
 
-% figure(),plot(time_minutes,Eload_k(:)/1000);
-% title 'Energia assorbita dal carico'
+% figure(),plot(time_minutes,Eload_k(:)/1000),title 'Energia assorbita dal carico'
 
 %% - Calcolo della Potenza Residua -
 %Differenza tra potenza erogata dal pannello e potenza assorbita dal carico
@@ -152,13 +151,15 @@ P_inv_bat_k = 3300*14; %W
 %Nella fase di carica della batteria, avremo delle perdite di potenza
 %dovute all'efficienza della Batteria.
 %Nella fase di scarica, avremo altre perdite di potenza dovute
-%all'effcienza dell'inverter interno alla batteris.
+%all'effcienza dell'inverter interno alla batteria.
+
 Befficiency = 0.98; % Rendimento della Batteria
 rendimentoInverterBatteria = 0.95; 
+
 Battery = ACBattery(fullCapacity, dod, P_inv_bat_k, Befficiency,rendimentoInverterBatteria);
 
 
-P_bat= filterPower(Battery,Presiduo_k)
+P_bat = filterPower(Battery,Presiduo_k);
 Ebat_k = batteryEnergy_k(Battery,P_bat);
 % figure(), plot(time_minutes,Ebat_k(:,2,1)/1000);
 
@@ -540,7 +541,7 @@ xlabel 'ore'
 ylabel 'Potenze [Kw]'
 
 
-%% Evoluzione energetica del sistema 
+%% Grafici (6) -> Evoluzione energetica della Batteria
 
 figure(10)
 %Aprile Soleggiato
@@ -726,7 +727,7 @@ ylabel 'Energia [kWh]'
 yline(fullCapacity/1000,'-r','CapacitàBatteria = 210 KWh');
 yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 
-%% Evoluzione energetica del sistema
+%% Grafici (7) ->  Evoluzione energetica del sistema
 figure(14)
 
 % Aprile
@@ -778,7 +779,7 @@ title('Energia complessiva prodotta a Dicembre')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
 
-%%  Energia Residua in batteria a fine giornata
+%% Grafici (8) -> Energia Residua in batteria a fine giornata
 figure(15)
 
 X = categorical({'Soleggiato','Nuvoloso','CasoPeggiore'});
@@ -830,7 +831,7 @@ b4.CData(2,:) = [0 0.4470 0.7410];
 b4.CData(3,:) = [0.92 0.69 0.12];
 title("Energia residua in batteria a fine giornata Dicembre")
 
-%%  Ore di ricarica richieste dalla batteria
+%% Grafici (9) ->  Ore di ricarica richieste dalla batteria
 
 figure(16)
 % Aprile
