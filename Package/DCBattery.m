@@ -72,19 +72,21 @@ classdef DCBattery
             P_bat=Presidual_k;
         end
         
-%         
-%         function Ebat_end_day = getEBatteryEndDay(obj,E_sist_res)
-%             Ebat_end_day=zeros(4,3);
-%             for k=1:1:length(E_sist_res)
-%                 for i=1:1:4
-%                     for j=1:1:3
-%                         if (E_sist_res(k,i,j) > obj.capacity)
-%                             Ebat_end_day(i,j)=E_sist_res(1440,i,j)- (max(E_sist_res(:,i,j))-obj.capacity );
-%                         end
-%                     end
-%                 end
-%             end
-%         end
+        function [Pbat_carica,Pbat_scarica] = decouplePowerBattery(obj,Pbat)
+            
+            for i=1:1:length(Pbat)
+                
+                if Pbat(i) >= 0
+                    Pbat_carica(i) = Pbat(i);
+                    Pbat_scarica(i) = 0;
+                    %Presidual_k(i,j,k)=Pin_k(i,j,k)-P_load(i);
+                else
+                    Pbat_carica(i) = 0;
+                    Pbat_scarica(i) = -Pbat(i);
+                end
+            end
+        end
+                       
         
     end
 end
