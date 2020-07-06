@@ -131,7 +131,6 @@ max_targetPrel=getMaxTarget(Inverter,Ppv_k_scaled,Pindcmax); % massimo
 Epv_out_k=cumtrapz(0.0167,Ppv_out_k);
 %figure(),plot(time_minutes,Epv_out_k(:,1,1)/1000), title 'Energia del fotvoltaico'
 
-
 %% - Calcolo della Potenza Residua -
 %Differenza tra potenza erogata dal pannello e potenza assorbita dal carico
 for j=1:1:4

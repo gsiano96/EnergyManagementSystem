@@ -168,6 +168,7 @@ Ebat_k = batteryEnergy_k(Battery,Presiduo_k);
 % 210kwh=6 moduli *14
 % Ptotass_ero=14*48*75=50.4kW
 % Tempo_carica=210kWh/50.4kW=4,16h
+
 enel_average_power = 50.4e+03;
 
 charging_time = getTimeToReload(Battery,enel_average_power,Ebat_k);
