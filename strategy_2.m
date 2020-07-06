@@ -163,10 +163,29 @@ Befficiency = 0.95; % Rendimento della Batteria
 
 Battery = DCBattery(capacity, dod,P_bat_k,Befficiency)
 
+%Lato DC
+P_bat= filterPower(Battery,Presiduo_k)
+Ebat_k = batteryEnergy_k(Battery,P_bat);
+%Potenza in uscita dall'inverter
 
-% Energia carica batteria
-Ebat_k=batteryEnergy_k(Battery,Ppv_k_scaled);
-% figure(), plot(time_minutes,Ebat_k(:,2,1)/1000);
+Prel_bat=abs(P_bat)/Pindcmax;
+IEff=interp1(Prel_k,efficiency_k,Prel_bat,'spline')
+
+
+for j=1:1:4
+    for k=1:1:3
+        [Pbat_carica(:,j,k),Pbat_scarica(:,j,k)] = decouplePowerBattery(Battery,P_bat(:,j,k))
+    end
+end
+
+% Percentuali di interesse in input all'inverter
+med_targetPrelbat=getMeanTarget(Inverter,Pbat_scarica,Pindcmax); % media
+max_targetPrelbat=getMaxTarget(Inverter,Pbat_scarica,Pindcmax); % massimo
+
+
+
+Pbat_out_k = interpolateInputPowerPoints(Inverter ,Pbat_scarica,'spline');
+figure(), plot(time_minutes,Pbat_out_k(:,2,1)/1000);
 
 %% Calcolo delle ore necessarie a caricare la batteria partendo da una
 % capacità residua pari a zero
@@ -174,7 +193,6 @@ Ebat_k=batteryEnergy_k(Battery,Ppv_k_scaled);
 % 210kwh=6 moduli *14
 % Ptotass_ero=14*48*75=50.4kW
 % Tempo_carica=210kWh/50.4kW=4,16h
-
 
 %Energia erogata dalla batteria compresa di perdite dovute all'inverter interno
 % Eout_bat_k=getEoutBattery(Battery,Eload_k,rendimentoInverterBatteria);
@@ -197,19 +215,25 @@ E_sist_res=(Epv_out_k-Eload_k-capacity);
 
 figure(1)
 
-subplot(2,1,1)
+subplot(2,2,1)
 plot(Pin_inv_k/1000,Pout_inv_k/1000);
 title("Caratteristica ingresso-uscita potenza PV tenendo conto dell'efficienza dell'inverter e temperatura") 
 xlabel 'Pinput [kw]'
 ylabel 'Pout [kw]'
 axis ([0 140 0 140])
 
-subplot(2,1,2)
+subplot(2,2,2)
 plot(Prel_k,efficiency_k);
 title("Caratteristica efficienza inverter") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
 
+
+% subplot(2,2,3)
+% plot(Pinbat_inv_k/1000,Poutbat_inv_k/1000);
+% title("Caratteristica ingresso-uscita potenza batteria-inverter") 
+% xlabel 'Prel [%]'
+% ylabel 'Rendimento [%]'
 %% Grafici (2) -> Valori medi di lavoro nella regione di efficienza dell'inverter fotovoltaico
 
 figure(2)
@@ -328,9 +352,108 @@ xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
 axis ([0 120 0 100])
 
-%% Grafici (2) -> Potenze fotovoltaico - potenze in uscita dall'inverter
+%% Grafici (3) -> Valori medi di lavoro nella regione di efficienza dell'inverter fotovoltaico Batteria
 
 figure(6)
+%Aprile 
+plot(Prel_k*100,efficiency_k*100)
+xline(mean(med_targetPrelbat(:))*100,'-g',mean(med_targetPrelbat(:))*100);
+xline(max(max_targetPrelbat(:))*100,'-r',max(max_targetPrelbat(:))*100);
+title("Caratteristica efficienza inverter-batteria Aprile") 
+xlabel 'Prel [%]'
+ylabel 'Rendimento [%]'
+axis ([0 130 0 100])
+
+
+% figure(7)
+% %Agosto Soleggiato
+% subplot(2,2,1)
+% plot(Prel_k*100,efficiency_k*100)
+% xline(med_targetPrelbat(1,2,1)*100,'-g',med_targetPrelbat(1,2,1)*100);
+% xline(max_targetPrelbat(1,2,1)*100,'-r',max_targetPrelbat(1,2,1)*100);
+% title("Caratteristica efficienza inverter Agosto Soleggiato") 
+% xlabel 'Prel [%]'
+% ylabel 'Rendimento [%]'
+% axis ([0 120 0 100])
+% %Agosto Nuvoloso 
+% subplot(2,2,2)
+% plot(Prel_k*100,efficiency_k*100)
+% xline(med_targetPrelbat(1,2,2)*100,'-g',med_targetPrelbat(1,2,2)*100);
+% xline(max_targetPrelbat(1,2,2)*100,'-r',max_targetPrelbat(1,2,2)*100);
+% title("Caratteristica efficienza inverter Agosto Nuvoloso") 
+% xlabel 'Prel [%]'
+% ylabel 'Rendimento [%]'
+% axis ([0 120 0 100])
+% %Agosto Caso peggiore
+% subplot(2,2,3)
+% plot(Prel_k*100,efficiency_k*100)
+% xline(med_targetPrelbat(1,2,3)*100,'-g',med_targetPrelbat(1,2,3)*100);
+% xline(max_targetPrelbat(1,2,3)*100,'-r',max_targetPrelbat(1,2,3)*100);
+% title("Caratteristica efficienza inverter Agosto Caso peggiore") 
+% xlabel 'Prel [%]'
+% ylabel 'Rendimento [%]'
+% axis ([0 120 0 100])
+% 
+% figure(8)
+% %Ottobre Soleggiato
+% subplot(2,2,1)
+% plot(Prel_k*100,efficiency_k*100)
+% xline(med_targetPrelbat(1,3,1)*100,'-g',med_targetPrelbat(1,3,1)*100);
+% xline(max_targetPrelbat(1,3,1)*100,'-r',max_targetPrelbat(1,3,1)*100);
+% title("Caratteristica efficienza inverter Ottobre Soleggiato") 
+% xlabel 'Prel [%]'
+% ylabel 'Rendimento [%]'
+% axis ([0 120 0 100])
+% %Ottobre Nuvoloso 
+% subplot(2,2,2)
+% plot(Prel_k*100,efficiency_k*100)
+% xline(med_targetPrelbat(1,3,2)*100,'-g',med_targetPrelbat(1,3,2)*100);
+% xline(max_targetPrelbat(1,3,2)*100,'-r',max_targetPrelbat(1,3,2)*100);
+% title("Caratteristica efficienza inverter Ottobre Nuvoloso") 
+% xlabel 'Prel [%]'
+% ylabel 'Rendimento [%]'
+% axis ([0 120 0 100])
+% %Ottobre Caso peggiore
+% subplot(2,2,3)
+% plot(Prel_k*100,efficiency_k*100)
+% xline(med_targetPrelbat(1,3,3)*100,'-g',med_targetPrelbat(1,3,3)*100);
+% xline(max_targetPrelbat(1,3,3)*100,'-r',max_targetPrelbat(1,3,3)*100);
+% title("Caratteristica efficienza inverter Ottobre Caso peggiore") 
+% xlabel 'Prel [%]'
+% ylabel 'Rendimento [%]'
+% axis ([0 120 0 100])
+% 
+% figure(9)
+% %Dicembre Soleggiato
+% subplot(2,2,1)
+% plot(Prel_k*100,efficiency_k*100)
+% xline(med_targetPrelbat(1,4,1)*100,'-g',med_targetPrelbat(1,4,1)*100);
+% xline(max_targetPrelbat(1,4,1)*100,'-r',max_targetPrelbat(1,4,1)*100);
+% title("Caratteristica efficienza inverter Dicembre Soleggiato") 
+% xlabel 'Prel [%]'
+% ylabel 'Rendimento [%]'
+% axis ([0 120 0 100])
+% %Dicembre Nuvoloso 
+% subplot(2,2,2)
+% plot(Prel_k*100,efficiency_k*100)
+% xline(med_targetPrelbat(1,4,2)*100,'-g',med_targetPrelbat(1,4,2)*100);
+% xline(max_targetPrelbat(1,4,2)*100,'-r',max_targetPrelbat(1,4,2)*100);
+% title("Caratteristica efficienza inverter Dicembre Nuvoloso") 
+% xlabel 'Prel [%]'
+% ylabel 'Rendimento [%]'
+% axis ([0 120 0 100])
+% %Dicembre Caso peggiore
+% subplot(2,2,3)
+% plot(Prel_k*100,efficiency_k*100)
+% xline(med_targetPrelbat(1,4,3)*100,'-g',med_targetPrelbat(1,4,3)*100);
+% xline(max_targetPrelbat(1,4,3)*100,'-r',max_targetPrelbat(1,4,3)*100);
+% title("Caratteristica efficienza inverter Dicembre Caso peggiore") 
+% xlabel 'Prel [%]'
+% ylabel 'Rendimento [%]'
+% axis ([0 120 0 100])
+%% Grafici (2) -> Potenze fotovoltaico - potenze in uscita dall'inverter
+
+figure(10)
 
 % Dicembre
 subplot(2,2,1)
@@ -380,7 +503,7 @@ title("Potenza del fotovoltaico in uscita dall'inverter Ottobre")
 
 %% Grafici (3) -> Grafici potenze fotovoltaico per tutti i mesi e casi
 
-figure(7)
+figure(11)
 %Aprile
 subplot(2,2,1)
 for i=1:1:3
@@ -431,7 +554,7 @@ title 'Dicembre'
 
 %% Grafici (4) -> Effetto di scalatura della potenza dovuto alla temperatura
 
-figure(8)
+figure(12)
 % Aprile
 subplot(2,2,1)
 plot(time_minutes,Ppv_k(:,1,1)/1000);
@@ -478,7 +601,7 @@ ylabel 'Ppv(k)'
 
 %% Grafici (5) -> Potenze Residue e di Carico per tutti i mesi e casi
 
-figure(9)
+figure(13)
 % Aprile
 subplot(2,2,1)
 for i=1:1:3
@@ -550,7 +673,7 @@ ylabel 'Potenze [Kw]'
 
 %% Evoluzione energetica del sistema 
 
-figure(10)
+figure(14)
 %Aprile Soleggiato
 subplot(2,2,1)
 plot(time_minutes,Ebat_k(:,1,1)/1000)
@@ -596,7 +719,7 @@ ylabel 'Energia [kWh]'
 yline(fullCapacity/1000,'-r','CapacitàBatteria = 210 KWh');
 yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 
-figure(11)
+figure(15)
 %Agosto Soleggiato
 subplot(2,2,1)
 plot(time_minutes,Ebat_k(:,2,1)/1000)
@@ -642,7 +765,7 @@ ylabel 'Energia [kWh]'
 yline(fullCapacity/1000,'-r','CapacitàBatteria = 210 KWh');
 yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 
-figure(12)
+figure(16)
 %Ottobre Soleggiato
 subplot(2,2,1)
 plot(time_minutes,Ebat_k(:,3,1)/1000)
@@ -735,7 +858,7 @@ yline(fullCapacity/1000,'-r','CapacitàBatteria = 210 KWh');
 yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = 21 KWh');
 
 %% Evoluzione energetica del sistema
-figure(14)
+figure(17)
 
 % Aprile
 subplot(2,2,1)

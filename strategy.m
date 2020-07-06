@@ -157,8 +157,9 @@ Befficiency = 0.98; % Rendimento della Batteria
 rendimentoInverterBatteria = 0.95; 
 Battery = ACBattery(fullCapacity, dod, P_inv_bat_k, Befficiency,rendimentoInverterBatteria);
 
-% Energia carica batteria
-Ebat_k = batteryEnergy_k(Battery,Presiduo_k);
+
+P_bat= filterPower(Battery,Presiduo_k)
+Ebat_k = batteryEnergy_k(Battery,P_bat);
 % figure(), plot(time_minutes,Ebat_k(:,2,1)/1000);
 
 %% Calcolo delle ore necessarie a caricare la batteria partendo da una
