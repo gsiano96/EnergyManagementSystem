@@ -220,7 +220,7 @@ subplot(2,2,2)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,1,2)*100,'-g',med_targetPrel(1,1,2)*100);
 xline(max_targetPrel(1,1,2)*100,'-r',max_targetPrel(1,1,2)*100);
-title("Caratteristica efficienza inverter Nuvoloso") 
+title("Caratteristica efficienza inverter Aprile Nuvoloso") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
 axis ([0 120 0 100])
@@ -229,7 +229,7 @@ subplot(2,2,3)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,1,3)*100,'-g',med_targetPrel(1,1,3)*100);
 xline(max_targetPrel(1,1,3)*100,'-r',max_targetPrel(1,1,3)*100);
-title("Caratteristica efficienza inverter Caso peggiore") 
+title("Caratteristica efficienza inverter Aprile Caso peggiore") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
 axis ([0 120 0 100])
