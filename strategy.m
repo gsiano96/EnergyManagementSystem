@@ -54,9 +54,9 @@ temperatureMed=[IrradianzaAprile.T IrradianzaAgosto.T IrradianzaOttobre.T Irradi
 
 %Mesi x Casi
 variazione_percentuale=[
-    40 0 -40;
+    30 0 -30;
     20 0 -20;
-    40 0 -40;
+    30 0 -30;
     20 0 -20];
 
 for j=1:1:4
@@ -213,25 +213,25 @@ xline(med_targetPrel(1,1,1)*100,'-g',med_targetPrel(1,1,1)*100);
 xline(max_targetPrel(1,1,1)*100,'-r',max_targetPrel(1,1,1)*100);
 title("Caratteristica efficienza inverter Aprile Soleggiato") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 axis ([0 130 0 100])
 %Aprile Nuvoloso 
 subplot(2,2,2)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,1,2)*100,'-g',med_targetPrel(1,1,2)*100);
 xline(max_targetPrel(1,1,2)*100,'-r',max_targetPrel(1,1,2)*100);
-title("Caratteristica efficienza inverter Nuvoloso") 
+title("Caratteristica efficienza inverter Aprile Nuvoloso") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 axis ([0 120 0 100])
 %Aprile Caso peggiore
 subplot(2,2,3)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,1,3)*100,'-g',med_targetPrel(1,1,3)*100);
 xline(max_targetPrel(1,1,3)*100,'-r',max_targetPrel(1,1,3)*100);
-title("Caratteristica efficienza inverter Caso peggiore") 
+title("Caratteristica efficienza inverter Aprile Caso peggiore") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 axis ([0 120 0 100])
 
 figure(3)
@@ -242,7 +242,7 @@ xline(med_targetPrel(1,2,1)*100,'-g',med_targetPrel(1,2,1)*100);
 xline(max_targetPrel(1,2,1)*100,'-r',max_targetPrel(1,2,1)*100);
 title("Caratteristica efficienza inverter Agosto Soleggiato") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 axis ([0 120 0 100])
 %Agosto Nuvoloso 
 subplot(2,2,2)
@@ -251,7 +251,7 @@ xline(med_targetPrel(1,2,2)*100,'-g',med_targetPrel(1,2,2)*100);
 xline(max_targetPrel(1,2,2)*100,'-r',max_targetPrel(1,2,2)*100);
 title("Caratteristica efficienza inverter Agosto Nuvoloso") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 axis ([0 120 0 100])
 %Agosto Caso peggiore
 subplot(2,2,3)
@@ -260,7 +260,7 @@ xline(med_targetPrel(1,2,3)*100,'-g',med_targetPrel(1,2,3)*100);
 xline(max_targetPrel(1,2,3)*100,'-r',max_targetPrel(1,2,3)*100);
 title("Caratteristica efficienza inverter Agosto Caso peggiore") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 axis ([0 120 0 100])
 
 figure(4)
@@ -271,7 +271,7 @@ xline(med_targetPrel(1,3,1)*100,'-g',med_targetPrel(1,3,1)*100);
 xline(max_targetPrel(1,3,1)*100,'-r',max_targetPrel(1,3,1)*100);
 title("Caratteristica efficienza inverter Ottobre Soleggiato") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 axis ([0 120 0 100])
 %Ottobre Nuvoloso 
 subplot(2,2,2)
@@ -280,7 +280,7 @@ xline(med_targetPrel(1,3,2)*100,'-g',med_targetPrel(1,3,2)*100);
 xline(max_targetPrel(1,3,2)*100,'-r',max_targetPrel(1,3,2)*100);
 title("Caratteristica efficienza inverter Ottobre Nuvoloso") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 axis ([0 120 0 100])
 %Ottobre Caso peggiore
 subplot(2,2,3)
@@ -289,7 +289,7 @@ xline(med_targetPrel(1,3,3)*100,'-g',med_targetPrel(1,3,3)*100);
 xline(max_targetPrel(1,3,3)*100,'-r',max_targetPrel(1,3,3)*100);
 title("Caratteristica efficienza inverter Ottobre Caso peggiore") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 axis ([0 120 0 100])
 
 figure(5)
@@ -300,7 +300,7 @@ xline(med_targetPrel(1,4,1)*100,'-g',med_targetPrel(1,4,1)*100);
 xline(max_targetPrel(1,4,1)*100,'-r',max_targetPrel(1,4,1)*100);
 title("Caratteristica efficienza inverter Dicembre Soleggiato") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 axis ([0 120 0 100])
 %Dicembre Nuvoloso 
 subplot(2,2,2)
@@ -309,7 +309,7 @@ xline(med_targetPrel(1,4,2)*100,'-g',med_targetPrel(1,4,2)*100);
 xline(max_targetPrel(1,4,2)*100,'-r',max_targetPrel(1,4,2)*100);
 title("Caratteristica efficienza inverter Dicembre Nuvoloso") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 axis ([0 120 0 100])
 %Dicembre Caso peggiore
 subplot(2,2,3)
@@ -318,7 +318,7 @@ xline(med_targetPrel(1,4,3)*100,'-g',med_targetPrel(1,4,3)*100);
 xline(max_targetPrel(1,4,3)*100,'-r',max_targetPrel(1,4,3)*100);
 title("Caratteristica efficienza inverter Dicembre Caso peggiore") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 axis ([0 120 0 100])
 
 %% Grafici (2) -> Potenze fotovoltaico - potenze in uscita dall'inverter
