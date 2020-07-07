@@ -54,9 +54,9 @@ temperatureMed=[IrradianzaAprile.T IrradianzaAgosto.T IrradianzaOttobre.T Irradi
 
 %Mesi x Casi
 variazione_percentuale=[
-    40 0 -40;
+    30 0 -30;
     20 0 -20;
-    40 0 -40;
+    30 0 -30;
     20 0 -20];
 
 for j=1:1:4
@@ -70,7 +70,6 @@ T_k = interp1(time_hours,T_k,time_minutes,'spline');
 
 %% - Campo fotovoltaico -
 Pnom = 327; %[W]
-Npannelli = 400;
 Vpanel_mpp = 54.7;
 Ipanel_mpp = 5.98;
 panelPowerTemperatureCoefficient = 0.35/100; %[/°C]
@@ -188,11 +187,16 @@ Pbat_out_k = interpolateInputPowerPoints(Inverter ,Pbat_scarica,'spline');
 %figure(), plot(time_minutes,Pbat_out_k(:,2,1)/1000);
 
 %% Calcolo delle ore necessarie a caricare la batteria partendo da una
-% capacità residua pari a zero
+% capacit� residua pari a zero
+
 % 15Kwh =6 moduli da 2.5kwh 
 % 210kwh=6 moduli *14
 % Ptotass_ero=14*48*75=50.4kW
 % Tempo_carica=210kWh/50.4kW=4,16h
+
+enel_average_power = 50.4e+03;
+
+charging_time = getTimeToReload(Battery,enel_average_power,Ebat_k);
 
 %Energia erogata dalla batteria compresa di perdite dovute all'inverter interno
 % Eout_bat_k=getEoutBattery(Battery,Eload_k,rendimentoInverterBatteria);
@@ -204,11 +208,6 @@ Pbat_out_k = interpolateInputPowerPoints(Inverter ,Pbat_scarica,'spline');
 
 %% Evoluzione energia del sistema
 E_sist_res=(Epv_out_k-Eload_k-capacity);
-% E_sist_res=E_sist_res(1440,:,:)
-
-%Energia in batteria alla fine della giornata
-% Ebat_end_day = getEBatteryEndDay(Battery,Ebat_k);
-
 
 
 %% Grafici (1) -> Caratteristica ingresso-uscita Potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
@@ -241,27 +240,27 @@ subplot(2,2,1)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,1,1)*100,'-g',med_targetPrel(1,1,1)*100);
 xline(max_targetPrel(1,1,1)*100,'-r',max_targetPrel(1,1,1)*100);
-title("Caratteristica efficienza inverter Aprile Soleggiato") 
+title("Caratteristica efficienza inverter-pv Aprile Soleggiato") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 
 %Aprile Nuvoloso 
 subplot(2,2,2)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,1,2)*100,'-g',med_targetPrel(1,1,2)*100);
 xline(max_targetPrel(1,1,2)*100,'-r',max_targetPrel(1,1,2)*100);
-title("Caratteristica efficienza inverter Nuvoloso") 
+title("Caratteristica efficienza inverter-pv Aprile Nuvoloso") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 
 %Aprile Caso peggiore
 subplot(2,2,3)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,1,3)*100,'-g',med_targetPrel(1,1,3)*100);
 xline(max_targetPrel(1,1,3)*100,'-r',max_targetPrel(1,1,3)*100);
-title("Caratteristica efficienza inverter Caso peggiore") 
-xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+title("Caratteristica efficienza inverter-pv Aprile Caso peggiore") 
+xlabel 'Prel [%]' 
+ylabel 'Efficienza [%]'
 
 
 figure(3)
@@ -270,27 +269,27 @@ subplot(2,2,1)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,2,1)*100,'-g',med_targetPrel(1,2,1)*100);
 xline(max_targetPrel(1,2,1)*100,'-r',max_targetPrel(1,2,1)*100);
-title("Caratteristica efficienza inverter Agosto Soleggiato") 
+title("Caratteristica efficienza inverter-pv Agosto Soleggiato") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 
 %Agosto Nuvoloso 
 subplot(2,2,2)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,2,2)*100,'-g',med_targetPrel(1,2,2)*100);
 xline(max_targetPrel(1,2,2)*100,'-r',max_targetPrel(1,2,2)*100);
-title("Caratteristica efficienza inverter Agosto Nuvoloso") 
+title("Caratteristica efficienza inverter-pv Agosto Nuvoloso") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 
 %Agosto Caso peggiore
 subplot(2,2,3)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,2,3)*100,'-g',med_targetPrel(1,2,3)*100);
 xline(max_targetPrel(1,2,3)*100,'-r',max_targetPrel(1,2,3)*100);
-title("Caratteristica efficienza inverter Agosto Caso peggiore") 
+title("Caratteristica efficienza inverter-pv Agosto Caso peggiore") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 
 
 figure(4)
@@ -299,27 +298,27 @@ subplot(2,2,1)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,3,1)*100,'-g',med_targetPrel(1,3,1)*100);
 xline(max_targetPrel(1,3,1)*100,'-r',max_targetPrel(1,3,1)*100);
-title("Caratteristica efficienza inverter Ottobre Soleggiato") 
+title("Caratteristica efficienza inverter-pv Ottobre Soleggiato") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 
 %Ottobre Nuvoloso 
 subplot(2,2,2)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,3,2)*100,'-g',med_targetPrel(1,3,2)*100);
 xline(max_targetPrel(1,3,2)*100,'-r',max_targetPrel(1,3,2)*100);
-title("Caratteristica efficienza inverter Ottobre Nuvoloso") 
+title("Caratteristica efficienza inverter-pv Ottobre Nuvoloso") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 
 %Ottobre Caso peggiore
 subplot(2,2,3)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,3,3)*100,'-g',med_targetPrel(1,3,3)*100);
 xline(max_targetPrel(1,3,3)*100,'-r',max_targetPrel(1,3,3)*100);
-title("Caratteristica efficienza inverter Ottobre Caso peggiore") 
+title("Caratteristica efficienza inverter-pv Ottobre Caso peggiore") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 
 
 figure(5)
@@ -328,27 +327,27 @@ subplot(2,2,1)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,4,1)*100,'-g',med_targetPrel(1,4,1)*100);
 xline(max_targetPrel(1,4,1)*100,'-r',max_targetPrel(1,4,1)*100);
-title("Caratteristica efficienza inverter Dicembre Soleggiato") 
+title("Caratteristica efficienza inverter-pv Dicembre Soleggiato") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 
 %Dicembre Nuvoloso 
 subplot(2,2,2)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,4,2)*100,'-g',med_targetPrel(1,4,2)*100);
 xline(max_targetPrel(1,4,2)*100,'-r',max_targetPrel(1,4,2)*100);
-title("Caratteristica efficienza inverter Dicembre Nuvoloso") 
+title("Caratteristica efficienza inverter-pv Dicembre Nuvoloso") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 
 %Dicembre Caso peggiore
 subplot(2,2,3)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,4,3)*100,'-g',med_targetPrel(1,4,3)*100);
 xline(max_targetPrel(1,4,3)*100,'-r',max_targetPrel(1,4,3)*100);
-title("Caratteristica efficienza inverter Dicembre Caso peggiore") 
+title("Caratteristica efficienza inverter-pv Dicembre Caso peggiore") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 
 
 %% Grafici (3) -> Valori medi di lavoro nella regione di efficienza dell'inverter fotovoltaico Batteria
@@ -360,7 +359,7 @@ xline(mean(med_targetPrelbat(:))*100,'-g',mean(med_targetPrelbat(:))*100);
 xline(max(max_targetPrelbat(:))*100,'-r',max(max_targetPrelbat(:))*100);
 title("Caratteristica efficienza inverter-batteria") 
 xlabel 'Prel [%]'
-ylabel 'Rendimento [%]'
+ylabel 'Efficienza [%]'
 
 
 
@@ -878,4 +877,43 @@ b4.CData(1,:) = [0.85 0.3250 0.0980];
 b4.CData(2,:) = [0 0.4470 0.7410];
 b4.CData(3,:) = [0.92 0.69 0.12];
 title("Energia residua in batteria a fine giornata Dicembre")
+
+figure(17)
+% Aprile
+X = categorical({'Soleggiato','Nuvoloso','CasoPeggiore'});
+subplot(2,2,1)
+h1 = bar(X,charging_time(1,:));
+h1.FaceColor = 'flat';
+h1.CData(1,:) = [0.85 0.3250 0.0980];
+h1.CData(2,:) = [0 0.4470 0.7410];
+h1.CData(3,:) = [0.92 0.69 0.12];
+title("Ore di ricarica richieste dalla batteria Aprile") 
+
+% Agosto
+subplot(2,2,2)
+h2 = bar(X,charging_time(2,:));
+h2.FaceColor = 'flat';
+h2.CData(1,:) = [0.85 0.3250 0.0980];
+h2.CData(2,:) = [0 0.4470 0.7410];
+h2.CData(3,:) = [0.92 0.69 0.12];
+title("Ore di ricarica richieste dalla batteria Agosto") 
+
+% Ottobre
+subplot(2,2,3)
+h3 = bar(X,charging_time(3,:));
+h3.FaceColor = 'flat';
+h3.CData(1,:) = [0.85 0.3250 0.0980];
+h3.CData(2,:) = [0 0.4470 0.7410];
+h3.CData(3,:) = [0.92 0.69 0.12];
+title("Ore di ricarica richieste dalla batteria Ottobre") 
+
+% Dicembre
+subplot(2,2,4)
+h4 = bar(X,charging_time(4,:));
+h4.FaceColor = 'flat';
+h4.CData(1,:) = [0.85 0.3250 0.0980];
+h4.CData(2,:) = [0 0.4470 0.7410];
+h4.CData(3,:) = [0.92 0.69 0.12];
+title("Ore di ricarica richieste dalla batteria Dicembre") 
+
 
