@@ -60,7 +60,7 @@ classdef DCBattery
         function index=getLastStartingDiscargingTime(obj)
         end
         
-        function P_bat= filterPower(obj,Presidual,Pload)
+        function P_bat= filterPower(obj,Presidual)
             % P_batteria
             Presidual_k = zeros(1440,4,3);
             for i=1:1:length(Presidual)
@@ -70,7 +70,7 @@ classdef DCBattery
                             Presidual_k(i,j,k) = Presidual(i,j,k)*obj.Befficiency;
                             %Presidual_k(i,j,k)=Pin_k(i,j,k)-P_load(i);
                         else
-                            Presidual_k(i,j,k) = -Pload(i);
+                            Presidual_k(i,j,k) = Presidual(i,j,k);
                         end
                     end
                 end
