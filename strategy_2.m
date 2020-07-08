@@ -877,6 +877,8 @@ b4.CData(2,:) = [0 0.4470 0.7410];
 b4.CData(3,:) = [0.92 0.69 0.12];
 title("Energia residua in batteria a fine giornata Dicembre")
 
+
+%% Grafici (9) -> Ore richieste per caricare la batteria
 figure(17)
 % Aprile
 X = categorical({'Soleggiato','Nuvoloso','CasoPeggiore'});

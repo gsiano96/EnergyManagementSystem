@@ -70,7 +70,7 @@ classdef DCBattery
                             Presidual_k(i,j,k) = Presidual(i,j,k)*obj.Befficiency;
                             %Presidual_k(i,j,k)=Pin_k(i,j,k)-P_load(i);
                         else
-                            Presidual_k(i,j,k) = -Pload(i);
+                            Presidual_k(i,j,k) = Presidual(i,j,k);
                         end
                     end
                 end
