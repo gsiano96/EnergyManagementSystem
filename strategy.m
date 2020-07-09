@@ -220,7 +220,6 @@ dicembre_bar = [hour_max_battery_4_1,hour_max_battery_4_2,hour_max_battery_4_3];
 
 
 % costi energia 
-
 price_min = (costi(20)+costi(21)+costi(22)+costi(23)+costi(24))/5;
 
 %% - Evoluzione energia del sistema - 
@@ -959,7 +958,7 @@ ylabel('Costo (€/MWh)')
 title('Profilo di costo energia')
 axis([1 24 30 70])
 
-%% Grafici (12) ->  Prezzo di ricarica Enel richiesto dalla batteria
+%% Grafici (12) ->  Prezzo di ricarica della batteria da rete Enel 
 
 figure(19)
 % Aprile
@@ -968,25 +967,57 @@ subplot(2,2,1)
 p1 = price_min * ((capacity-Ebat_aprile*1000)*1.0e-06);
 pie(p1,{string(p1(1))+ '€',string(p1(2))+ '€',string(p1(3))+ '€'});
 legend(labels)
-title("Prezzo di ricarica Enel Aprile") 
+title("Prezzo di ricarica della batteria da rete Enel Aprile") 
 
 % Agosto
 subplot(2,2,2)
 p2 = price_min * ((capacity-Ebat_agosto*1000)*1.0e-06);
 pie(p2,{string(p2(1))+ '€',string(p2(2))+ '€',string(p2(3))+ '€'});
 legend(labels)
-title("Prezzo di ricarica Enel Agosto") 
+title("Prezzo di ricarica della batteria da rete Enel Agosto") 
 
 % Ottobre
 subplot(2,2,3)
 p3 = price_min * ((capacity-Ebat_ottobre*1000)*1.0e-06);
 pie(p3,{string(p3(1))+ '€',string(p3(2))+ '€',string(p3(3))+ '€'});
 legend(labels)
-title("Prezzo di ricarica Enel Ottobre") 
+title("Prezzo di ricarica della batteria da rete Enel Ottobre") 
 
 % Dicembre
 subplot(2,2,4)
 p4 = price_min * ((capacity-Ebat_dicembre*1000)*1.0e-06);
 pie(p4,{string(p4(1))+ '€',string(p4(2))+ '€',string(p4(3))+ '€'});
 legend(labels)
-title("Prezzo di ricarica Enel Dicembre") 
+title("Prezzo di ricarica della batteria da rete Enel Dicembre") 
+
+%% Grafici (13) ->  Prezzo mensile di sostentamento da rete Enel 
+
+figure(20)
+% Aprile
+labels = {'Soleggiato','Nuvoloso','CasoPeggiore'};
+subplot(2,2,1)
+s1 = price_min * abs((E_sist_res(1440,1,:))*1.0e-06);
+pie(s1,{string(s1(1))+ '€',string(s1(2))+ '€',string(s1(3))+ '€'});
+legend(labels)
+title("Prezzo di sostentamento da rete Enel Aprile") 
+
+% Agosto
+subplot(2,2,2)
+s2 = price_min * abs((E_sist_res(1440,2,:))*1.0e-06);
+pie(s2,{string(s2(1))+ '€',string(s2(2))+ '€',string(s2(3))+ '€'});
+legend(labels)
+title("Prezzo di sostentamento da rete Enel Agosto") 
+
+% Ottobre
+subplot(2,2,3)
+s3 = price_min * abs((E_sist_res(1440,3,:))*1.0e-06);
+pie(s3,{string(s3(1))+ '€',string(s3(2))+ '€',string(s3(3))+ '€'});
+legend(labels)
+title("Prezzo di sostentamento da rete Enel Ottobre") 
+
+% Dicembre
+subplot(2,2,4)
+s4 = price_min * abs((E_sist_res(1440,4,:))*1.0e-06);
+pie(s4,{string(s4(1))+ '€',string(s4(2))+ '€',string(s4(3))+ '€'});
+legend(labels)
+title("Prezzo di sostentamento da rete Enel Dicembre") 
