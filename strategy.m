@@ -91,19 +91,6 @@ Pload_med = mean(Pload_k); %formula per il valore medio della potenza del carico
 Eload_k = cumtrapz(0.0167,Pload_k);
 % figure(),plot(time_minutes,Eload_k(:)/1000),title 'Energia assorbita dal carico'
 
-%% - Ottimizzazione numero di Pannelli - 
-margin = 2 * Pload_med; %[W]   <-- 1 scelta
-Nmin_pannelli = 400; %ceil((margin+Pload_med)/Pnom);
-
-
-%% - Dimensionamento Potenze campo fotovoltaico -
-PvField=PhotovoltaicField(Nmin_pannelli,Pnom,Vpanel_mpp,panelPowerTemperatureCoefficient,...
-    panelVoltageTemperatureCoefficient,seriesPanelsNumber,parallelsPanelsNumber,NOCT);
-Ppv_k=getMaxOutputPowerSTC(PvField,G_k);
-
-Ppv_k_scaled=rescaleMPPByTemperature(PvField,Ppv_k,T_k,G_k);
-
-
 %% - Inverter Fotovoltaico Solarmax da 100kw DC -
 Prel_k = SolarmaxInverter.relativePower/100;
 efficiency_k = SolarmaxInverter.efficiency/100;
@@ -112,21 +99,33 @@ efficiency_k = SolarmaxInverter.efficiency/100;
 Prel_k=[0;Prel_k];
 efficiency_k=[0;efficiency_k];
 
-% ATTENZIONE non possiamo scendere sotto i 120Kw per non avere un fenomeno di power clipping
-
-%% - Ottimizzazione parametri energetici Inverter - 
 Pindcmax = 105*1e3;  %nominal P DC   <-- 2 scelta
 Poutacmax = 80*1e3; %max P AC 
-
 inputVoltageInterval = [430,900];
 outputVoltageInterval = 400; 
 phasesNumber = 3; % trifase
-
+ 
 Inverter = Solarmaxinverter(Prel_k,efficiency_k,Pindcmax,Poutacmax, inputVoltageInterval, outputVoltageInterval, phasesNumber);
 %potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
 [Pin_inv_k,Pout_inv_k] = getCharacteristicPout_Pin(Inverter,true);
-% Interpolazione dei punti dell'asse Pinput corrispondenti a Ppv
 
+
+%% - Ottimizzazione numero di Pannelli - 
+
+Prel_r = max(efficiency_k);
+efficiency_r = 0.948;
+
+margin = (Prel_r .* Pindcmax .* efficiency_r) - Pload_med; %[W] 
+Nmin_pannelli = ceil((margin+Pload_med)/Pnom);
+
+%% - Dimensionamento Potenze campo fotovoltaico -
+PvField=PhotovoltaicField(Nmin_pannelli,Pnom,Vpanel_mpp,panelPowerTemperatureCoefficient,...
+    panelVoltageTemperatureCoefficient,seriesPanelsNumber,parallelsPanelsNumber,NOCT);
+Ppv_k=getMaxOutputPowerSTC(PvField,G_k);
+
+Ppv_k_scaled=rescaleMPPByTemperature(PvField,Ppv_k,T_k,G_k);
+
+% Interpolazione dei punti dell'asse Pinput corrispondenti a Ppv
 Ppv_out_k = interpolateInputPowerPoints(Inverter ,Ppv_k_scaled,'spline');
 
 % Percentuali di interesse in input all'inverter
@@ -152,9 +151,7 @@ Epv_res_k=cumtrapz(0.0167,Presiduo_k);
 % Calcolo del punti in cui abbiamo la completa compensazione tra la potenza 
 % erogata dal pannello e quella assorbita dal carico
 
-%% - Batteria Sonnen-
-
-%% - Ottimizzazione parametri energetici Batteria - 
+%% - Ottimizzazione Batteria Sonnen - 
 fullCapacity = 210*1e3; % Capacità della Batteria in Wh  <-- 3 scelta
 capacity = 210*1e3; % Wh
 
@@ -174,13 +171,12 @@ P_bat = filterPower(Battery,Presiduo_k);
 Ebat_k = batteryEnergy_k(Battery,P_bat);
 % figure(), plot(time_minutes,Ebat_k(:,2,1)/1000);
 
-%% Calcolo delle ore necessarie a caricare la batteria partendo da una
-% capacità residua pari a zero
+%% - Ore necessarie per caricare la Batteria -
 
 % 15Kwh =6 moduli da 2.5kwh 
 % 210kwh=6 moduli *14
 % Ptotass_ero=14*48*75=50.4kW
-% Tempo_carica=210kWh/50.4kW=4,16h
+% Tempo_carica=210kWh/50.4kW=4,17h
 
 enel_average_power = 50.4e+03;
 
@@ -194,13 +190,19 @@ charging_time = getTimeToReload(Battery,enel_average_power,Ebat_k);
 % Flusso di potenza input/output in uscita/ingresso dall'inverter
 %Presiduo_bat_inverter = Presiduo_k*rendimentoInverterBatteria;
 
-%% - Ottimizzazione Enel - 
+%% - Ottimizzazione di ricarica dall'Enel - 
 %risparmio in termini di costo --> ore cui comprare dall'enel <-- 4 scelta
 %costi energia - capacità batteria residuo - potenza fotovoltaico
 %inizio-fine giornata la stessa inergia in batteria
 
-%% Evoluzione energia del sistema
+%quando mi canviene ricaricarla?
+
+%% - Evoluzione energia del sistema - 
 E_sist_res=(Epv_out_k-Eload_k-capacity);
+
+%% - Analisi dei Costi di Vendita  -
+% tra i 4 ed i 6 centesimi per kWh
+
 
 %% Grafici (1) -> Caratteristica ingresso-uscita Potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
 
@@ -886,4 +888,3 @@ h4.CData(1,:) = [0.85 0.3250 0.0980];
 h4.CData(2,:) = [0 0.4470 0.7410];
 h4.CData(3,:) = [0.92 0.69 0.12];
 title("Ore di ricarica richieste dalla batteria Dicembre") 
-
