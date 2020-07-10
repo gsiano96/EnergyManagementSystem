@@ -75,8 +75,8 @@ Ipanel_mpp = 5.98;
 panelPowerTemperatureCoefficient = 0.35/100; %[/°C]
 panelVoltageTemperatureCoefficient = 176.6/1000; %[V/°C]
 seriesPanelsNumber = 400;
-parallelsPanelsNumber = 1;
-NOCT = 45;
+parallelsPanelsNumber = 1
+NOCT = 45 + randi([-2 2],1,1);
 
 %% Carico
 Pload_k=vector(:,2)*1000; %W 
