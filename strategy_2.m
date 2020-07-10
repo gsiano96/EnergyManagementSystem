@@ -75,8 +75,8 @@ Ipanel_mpp = 5.98;
 panelPowerTemperatureCoefficient = 0.35/100; %[/°C]
 panelVoltageTemperatureCoefficient = 176.6/1000; %[V/°C]
 seriesPanelsNumber = 400;
-parallelsPanelsNumber = 1;
-NOCT = 45;
+parallelsPanelsNumber = 1
+NOCT = 45 + randi([-2 2],1,1);
 
 %% Carico
 Pload_k=vector(:,2)*1000; %W 
@@ -875,8 +875,8 @@ b4.CData(2,:) = [0 0.4470 0.7410];
 b4.CData(3,:) = [0.92 0.69 0.12];
 title("Energia residua in batteria a fine giornata Dicembre")
 
-%% Grafici (9) ->  Ore di ricarica richieste dalla batteria
 
+%% Grafici (9) -> Ore richieste per caricare la batteria
 figure(17)
 % Aprile
 X = categorical({'Soleggiato','Nuvoloso','CasoPeggiore'});
