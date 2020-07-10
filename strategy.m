@@ -75,9 +75,9 @@ Pnom = 327; %[W]
 % --> Npannelli = 400; <--
 Vpanel_mpp = 54.7;
 Ipanel_mpp = 5.98;
-panelPowerTemperatureCoefficient = 0.35/100; %[/�C]
-panelVoltageTemperatureCoefficient = 176.6/1000; %[V/�C]
-NOCT = 45; %[�C]
+panelPowerTemperatureCoefficient = 0.35/100; %[/C]
+panelVoltageTemperatureCoefficient = 176.6/1000; %[V/C]
+NOCT = 45 + randi([-2 2],1,1); %[C] --> Nominal Operating Cell Temperature
 
 %% - Disposizione campo fotovoltaico -
 seriesPanelsNumber = 400;
@@ -249,8 +249,7 @@ hour_max_battery_4_2 = getHourMaxBattery4_2(Battery,Ebat_k,enel_average_power,ho
 hour_max_battery_4_3 = getHourMaxBattery4_3(Battery,Ebat_k,enel_average_power,hours);
 dicembre_bar = [hour_max_battery_4_1,hour_max_battery_4_2,hour_max_battery_4_3];
 
-
-% costi energia 
+% costi energia  
 price_min = (costi(20)+costi(21)+costi(22)+costi(23)+costi(24))/5;
 
 %% - Evoluzione energia del sistema - 
