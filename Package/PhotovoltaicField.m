@@ -54,7 +54,7 @@ classdef PhotovoltaicField
         end
         
         function Ppv_k=rescaleMPPByTemperature(obj,Pmpp_k,temperatureDegree_k,G_k)
-            % Don't scale if the temperature is 25°C
+            % Don't scale if the temperature is 25ï¿½C
             %temperatureDegree_k(find(temperatureDegree_k == 25))=0;
             tPv_k=ones(1440,4,3);
             for i=1:1:length(tPv_k)

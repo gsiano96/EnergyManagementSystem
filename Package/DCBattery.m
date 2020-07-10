@@ -27,7 +27,7 @@ classdef DCBattery
                     Ebat_k(1,j,k)=obj.capacity;
                     for i=2:1:length(Presidual_k)
                         
-                        Ebat_k(i,j,k)=Ebat_k(i-1,j,k)+(Presidual_k(i,j,k)+ Presidual_k(i-1,j,k))*0.0167/2;
+                        Ebat_k(i,j,k)=Ebat_k(i-1,j,k)+(Presidual_k(i,j,k)+ Presidual_k(i-1,j,k)) * 0.0167/2;
                         
                         %Cutoff control for charging phase
                         if( Ebat_k(i,j,k)> obj.capacity)
@@ -60,7 +60,7 @@ classdef DCBattery
         function index=getLastStartingDiscargingTime(obj)
         end
         
-        function P_bat= filterPower(obj,Presidual,Pload)
+        function P_bat= filterPower(obj,Presidual)
             % P_batteria
             Presidual_k = zeros(1440,4,3);
             for i=1:1:length(Presidual)
@@ -79,7 +79,6 @@ classdef DCBattery
         end
         
         function [Pbat_carica,Pbat_scarica] = decouplePowerBattery(obj,Pbat)
-            
             for i=1:1:length(Pbat)
                 
                 if Pbat(i) >= 0
@@ -88,7 +87,7 @@ classdef DCBattery
                     %Presidual_k(i,j,k)=Pin_k(i,j,k)-P_load(i);
                 else
                     Pbat_carica(i) = 0;
-                    Pbat_scarica(i) = -Pbat(i);
+                    Pbat_scarica(i) = - Pbat(i);
                 end
             end
         end
