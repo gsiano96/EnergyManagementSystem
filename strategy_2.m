@@ -43,7 +43,7 @@ for j=1:1:4
     % Seconda pagina della matrice (caso medio)
     G_k(:,j,2)=irradianzeMed(:,j);
     % Terza pagina della matrice (caso nuvoloso)
-    G_k(:,j,3)=G_k(:,j,1)*(1-0.80); % Caso peggiore => -80%
+    G_k(:,j,3)=G_k(:,j,1)*(1-0.60); % Caso peggiore => -60%
 end
 
 %% - Interpolazione fino a 1440 punti valore su ogni colonna di ogni pagina -
@@ -74,33 +74,23 @@ Vpanel_mpp = 54.7;
 Ipanel_mpp = 5.98;
 panelPowerTemperatureCoefficient = 0.35/100; %[/Â°C]
 panelVoltageTemperatureCoefficient = 176.6/1000; %[V/Â°C]
+NOCT = 45 + randi([-2 2],1,1); %[Â°C]
+
+%% - Disposizione campo fotovoltaico -
 seriesPanelsNumber = 400;
-parallelsPanelsNumber = 1
-NOCT = 45 + randi([-2 2],1,1);
+parallelsPanelsNumber = 1;
 
 %% Carico
 Pload_k=vector(:,2)*1000; %W 
+
 Pload_med = mean(Pload_k);
 carico=Load(Pload_k);
 
 %Energia assorbita dal carico
 Eload_k = cumtrapz(0.0167,Pload_k);
+%figure(),plot(time_minutes,Eload_k(:)/1000),title 'Energia assorbita dal carico'
 
-% figure(),plot(time_minutes,Eload_k(:)/1000),title 'Energia assorbita dal carico'
-
-%% Ottimizzazione numero di Pannelli
-Prel_r = max(efficiency_k);
-efficiency_r = 0.948;
-
-margin = (Prel_r .* Pindcmax .* efficiency_r) - Pload_med; %[W]
-Nmin_pannelli = ceil((margin+Pload_med)/Pnom);
-
-PvField=PhotovoltaicField(Nmin_pannelli,Pnom,Vpanel_mpp,panelPowerTemperatureCoefficient,...
-    panelVoltageTemperatureCoefficient,seriesPanelsNumber,parallelsPanelsNumber,NOCT);
-Ppv_k=getMaxOutputPowerSTC(PvField,G_k);
-
-Ppv_k_scaled=rescaleMPPByTemperature(PvField,Ppv_k,T_k,G_k);
-
+Eload_med = Eload_k(1440)/24;
 %% - Inverter Fotovoltaico Solarmax da 66kw DC -
 Prel_k=SolarmaxInverter.relativePower/100;
 efficiency_k=SolarmaxInverter.efficiency/100;
@@ -110,8 +100,8 @@ Prel_k=[0;Prel_k];
 efficiency_k=[0;efficiency_k];
 
 % ATTENZIONE OTTIMIZZAZIONE INVERTER
-Pindcmax = 66*1e3;  %nominal P DC
-Poutacmax = 50*1e3; %max P AC 
+Pindcmax = 105*1e3;  %nominal P DC
+Poutacmax = 80*1e3; %max P AC 
 
 inputVoltageInterval = [430,900];
 outputVoltageInterval = 400; 
@@ -122,9 +112,27 @@ Inverter = Solarmaxinverter(Prel_k,efficiency_k,Pindcmax,Poutacmax, inputVoltage
 %potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
 [Pin_inv_k,Pout_inv_k] = getCharacteristicPout_Pin(Inverter,true);
 
+
+%% Ottimizzazione numero di Pannelli
+Prel_r = max(efficiency_k);
+efficiency_r = 0.956;
+
+margin = ((Prel_r .* Pindcmax .* efficiency_r) - Pload_med)  * 1.23; %[W]
+Nmin_pannelli = ceil((margin+Pload_med)/Pnom)
+
+
+%% - Dimensionamento Potenze campo fotovoltaico -
+PvField=PhotovoltaicField(Nmin_pannelli,Pnom,Vpanel_mpp,panelPowerTemperatureCoefficient,...
+    panelVoltageTemperatureCoefficient,seriesPanelsNumber,parallelsPanelsNumber,NOCT);
+Ppv_k=getMaxOutputPowerSTC(PvField,G_k);
+
+Ppv_k_scaled=rescaleMPPByTemperature(PvField,Ppv_k,T_k,G_k);
+
+
 % Interpolazione dei punti dell'asse Pinput corrispondenti a Ppv
 Ppv_out_k = interpolateInputPowerPoints(Inverter ,Ppv_k_scaled,'spline');
 
+%% Funzionamento del sistema 
 % Percentuali di interesse in input all'inverter
 med_targetPrel=getMeanTarget(Inverter,Ppv_k_scaled,Pindcmax); % media
 max_targetPrel=getMaxTarget(Inverter,Ppv_k_scaled,Pindcmax); % massimo
@@ -150,8 +158,8 @@ Epv_res_k=cumtrapz(0.0167,Presiduo_k);
 
 %% - Batteria DC senza inverter LG CHEM -
 energy_module = 13.1*1e3;  % [Wh]
-modules = 9; %12
-fullCapacity = energy_module * modules; % CapacitÃ  della Batteria in Wh
+modules = ceil((Pload_med * 4)/(energy_module)) %12
+fullCapacity = energy_module * modules % CapacitÃ  della Batteria in Wh
 capacity =  fullCapacity; % Wh
 dod = 0.90; 
 
@@ -544,7 +552,7 @@ ylabel 'Ppv(k)'
 
 % I mesi Aprile, Ottobre e Dicembre 
 % non risentono dell'effetto di scalatura della potenza dovuto
-% alla temperatura, essendo questa al di sotto di 25°C
+% alla temperatura, essendo questa al di sotto di 25ï¿½C
 
 figure(10)
 % Aprile
@@ -589,7 +597,7 @@ ylabel 'Ppv(k)'
 
 % I mesi Aprile, Ottobre e Dicembre 
 % non risentono dell'effetto di scalatura della potenza dovuto
-% alla temperatura, essendo questa al di sotto di 25°C
+% alla temperatura, essendo questa al di sotto di 25ï¿½C
 
 figure(11)
 % Aprile
@@ -634,7 +642,7 @@ ylabel 'Ppv(k)'
 
 % I mesi Aprile, Ottobre e Dicembre 
 % non risentono dell'effetto di scalatura della potenza dovuto
-% alla temperatura, essendo questa al di sotto di 25°C
+% alla temperatura, essendo questa al di sotto di 25ï¿½C
 
 
 %% Grafici (7) -> Potenze Residue e di Carico per tutti i mesi e casi
@@ -1003,7 +1011,7 @@ title("Orario di partenza della fase di ricarica della batteria ");
 figure(21)
 plot(costi)
 xlabel('Ore del giorno')
-ylabel('Costo (€/MWh)')
+ylabel('Costo (ï¿½/MWh)')
 title('Profilo di costo energia')
 axis([1 24 30 70])
 
@@ -1016,28 +1024,28 @@ figure(22)
 labels = {'Soleggiato','Nuvoloso','CasoPeggiore'};
 subplot(2,2,1)
 s1 = price_min * abs((E_sist_res(1440,1,:))*1.0e-06);
-pie(s1,{string(s1(1))+ '€',string(s1(2))+ '€',string(s1(3))+ '€'});
+pie(s1,{string(s1(1))+ 'ï¿½',string(s1(2))+ 'ï¿½',string(s1(3))+ 'ï¿½'});
 legend(labels)
 title("Prezzo di sostentamento da rete Enel Aprile") 
 
 % Agosto
 subplot(2,2,2)
 s2 = price_min * abs((E_sist_res(1440,2,:))*1.0e-06);
-pie(s2,{string(s2(1))+ '€',string(s2(2))+ '€',string(s2(3))+ '€'});
+pie(s2,{string(s2(1))+ 'ï¿½',string(s2(2))+ 'ï¿½',string(s2(3))+ 'ï¿½'});
 legend(labels)
 title("Prezzo di sostentamento da rete Enel Agosto") 
 
 % Ottobre
 subplot(2,2,3)
 s3 = price_min * abs((E_sist_res(1440,3,:))*1.0e-06);
-pie(s3,{string(s3(1))+ '€',string(s3(2))+ '€',string(s3(3))+ '€'});
+pie(s3,{string(s3(1))+ 'ï¿½',string(s3(2))+ 'ï¿½',string(s3(3))+ 'ï¿½'});
 legend(labels)
 title("Prezzo di sostentamento da rete Enel Ottobre") 
 
 % Dicembre
 subplot(2,2,4)
 s4 = price_min * abs((E_sist_res(1440,4,:))*1.0e-06);
-pie(s4,{string(s4(1))+ '€',string(s4(2))+ '€',string(s4(3))+ '€'});
+pie(s4,{string(s4(1))+ 'ï¿½',string(s4(2))+ 'ï¿½',string(s4(3))+ 'ï¿½'});
 legend(labels)
 title("Prezzo di sostentamento da rete Enel Dicembre") 
 
@@ -1049,28 +1057,28 @@ figure(23)
 labels = {'Soleggiato','Nuvoloso','CasoPeggiore'};
 subplot(2,2,1)
 p1 = price_min * ((capacity-Ebat_aprile*1000)*1.0e-06);
-pie(p1,{string(p1(1))+ '€',string(p1(2))+ '€',string(p1(3))+ '€'});
+pie(p1,{string(p1(1))+ 'ï¿½',string(p1(2))+ 'ï¿½',string(p1(3))+ 'ï¿½'});
 legend(labels)
 title("Prezzo di ricarica della batteria da rete Enel Aprile") 
 
 % Agosto
 subplot(2,2,2)
 p2 = price_min * ((capacity-Ebat_agosto*1000)*1.0e-06);
-pie(p2,{string(p2(1))+ '€',string(p2(2))+ '€',string(p2(3))+ '€'});
+pie(p2,{string(p2(1))+ 'ï¿½',string(p2(2))+ 'ï¿½',string(p2(3))+ 'ï¿½'});
 legend(labels)
 title("Prezzo di ricarica della batteria da rete Enel Agosto") 
 
 % Ottobre
 subplot(2,2,3)
 p3 = price_min * ((capacity-Ebat_ottobre*1000)*1.0e-06);
-pie(p3,{string(p3(1))+ '€',string(p3(2))+ '€',string(p3(3))+ '€'});
+pie(p3,{string(p3(1))+ 'ï¿½',string(p3(2))+ 'ï¿½',string(p3(3))+ 'ï¿½'});
 legend(labels)
 title("Prezzo di ricarica della batteria da rete Enel Ottobre") 
 
 % Dicembre
 subplot(2,2,4)
 p4 = price_min * ((capacity-Ebat_dicembre*1000)*1.0e-06);
-pie(p4,{string(p4(1))+ '€',string(p4(2))+ '€',string(p4(3))+ '€'});
+pie(p4,{string(p4(1))+ 'ï¿½',string(p4(2))+ 'ï¿½',string(p4(3))+ 'ï¿½'});
 legend(labels)
 title("Prezzo di ricarica della batteria da rete Enel Dicembre") 
 
@@ -1083,7 +1091,7 @@ subplot(2,2,1)
 t1(1)=s1(1)+p1(1);
 t1(2)=s1(2)+p1(2);
 t1(3)=s1(3)+p1(3);
-pie(t1,{string(t1(1))+ '€',string(t1(2))+ '€',string(t1(3))+ '€'});
+pie(t1,{string(t1(1))+ 'ï¿½',string(t1(2))+ 'ï¿½',string(t1(3))+ 'ï¿½'});
 legend(labels)
 title("Prezzo totale acquisto da rete Enel Aprile") 
 
@@ -1092,7 +1100,7 @@ subplot(2,2,2)
 t2(1)=s2(1)+p2(1);
 t2(2)=s2(2)+p2(2);
 t2(3)=s2(3)+p2(3);
-pie(t2,{string(t2(1))+ '€',string(t2(2))+ '€',string(t2(3))+ '€'});
+pie(t2,{string(t2(1))+ 'ï¿½',string(t2(2))+ 'ï¿½',string(t2(3))+ 'ï¿½'});
 legend(labels)
 title("Prezzo totale acquisto da rete Enel Agosto") 
 
@@ -1101,7 +1109,7 @@ subplot(2,2,3)
 t3(1)=s3(1)+p3(1);
 t3(2)=s3(2)+p3(2);
 t3(3)=s3(3)+p3(3);
-pie(t3,{string(t3(1))+ '€',string(t3(2))+ '€',string(t3(3))+ '€'});
+pie(t3,{string(t3(1))+ 'ï¿½',string(t3(2))+ 'ï¿½',string(t3(3))+ 'ï¿½'});
 legend(labels)
 title("Prezzo totale acquisto da rete Enel Ottobre") 
 
@@ -1110,7 +1118,7 @@ subplot(2,2,4)
 t4(1)=s4(1)+p4(1);
 t4(2)=s4(2)+p4(2);
 t4(3)=s4(3)+p4(3);
-pie(t4,{string(t4(1))+ '€',string(t4(2))+ '€',string(t4(3))+ '€'});
+pie(t4,{string(t4(1))+ 'ï¿½',string(t4(2))+ 'ï¿½',string(t4(3))+ 'ï¿½'});
 legend(labels)
 title("Prezzo totale acquisto da rete Enel Dicembre") 
 

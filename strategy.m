@@ -45,7 +45,7 @@ for j=1:1:4
     % Seconda pagina della matrice (caso medio)
     G_k(:,j,2)=irradianzeMed(:,j);
     % Terza pagina della matrice (caso nuvoloso)
-    G_k(:,j,3)=G_k(:,j,1)*(1-0.80); % Caso peggiore => -80%
+    G_k(:,j,3)=G_k(:,j,1)*(1-0.60); % Caso peggiore => -80%
 end
 
 %% - Interpolazione fino a 1440 punti valore su ogni colonna di ogni pagina -
