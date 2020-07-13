@@ -1,7 +1,8 @@
-%% - Operazioni di Pulizia -
+%% - Operazioni di Pulizia e formattazione -
 clear all;
 clc; 
 close all;
+set(0,'defaultfigurecolor','w');
 
 %% - Caricamento dati -
 load Matfile/energy_hourly_cost.mat
