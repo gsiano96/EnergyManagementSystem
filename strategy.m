@@ -743,12 +743,12 @@ yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = ' +string(fullCapacity/1000
 %Aprile Caso peggiore
 subplot(2,2,3)
 plot(time_minutes,Ebat_k(:,1,3)/1000)
-% idx_giorno_apr = interp1(Presiduo_k(1:1:430,1,3),hours(1:1:430),0,'nearest');
-% time_idx_giorno_apr = datetime(string(datestr(idx_giorno_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
+idx_giorno_apr = interp1(Presiduo_k(1:1:430,1,3),hours(1:1:430),0,'nearest');
+time_idx_giorno_apr = datetime(string(datestr(idx_giorno_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
 % idx_sera_apr = interp1(Presiduo_k(end:-1:720,1,3),hours(end:-1:720),0,'nearest');
 % time_idx_sera_apr = datetime(string(datestr(idx_sera_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
 % xline(time_idx_sera_apr,'-r','Deficit Potenza Residua')
-% xline(time_idx_giorno_apr,'-m','Surplus Potenza Residua')
+xline(time_idx_giorno_apr,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Aprile Caso Peggiore')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
@@ -789,12 +789,12 @@ yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = ' +string(fullCapacity/1000
 %Agosto Caso peggiore
 subplot(2,2,3)
 plot(time_minutes,Ebat_k(:,2,3)/1000)
-% idx_giorno_ago = interp1(Presiduo_k(1:1:430,2,3),hours(1:1:430),0,'nearest');
-% time_idx_giorno_ago = datetime(string(datestr(idx_giorno_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
+idx_giorno_ago = interp1(Presiduo_k(1:1:430,2,3),hours(1:1:430),0,'nearest');
+time_idx_giorno_ago = datetime(string(datestr(idx_giorno_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
 % idx_sera_ago = interp1(Presiduo_k(end:-1:720,2,3),hours(end:-1:720),0,'nearest');
 % time_idx_sera_ago_3 = datetime(string(datestr(idx_sera_ago/24,'HH:MM')) ,'InputFormat','HH:mm');
 % xline(time_idx_sera_ago_3,'-r','Deficit Potenza Residua')
-% xline(time_idx_giorno_ago,'-m','Surplus Potenza Residua')
+xline(time_idx_giorno_ago,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Agosto Caso Peggiore')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
@@ -835,12 +835,12 @@ yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = ' +string(fullCapacity/1000
 %Ottobre Caso peggiore
 subplot(2,2,3)
 plot(time_minutes,Ebat_k(:,3,3)/1000)
-% idx_giorno_ott = interp1(Presiduo_k(1:1:430,3,3),hours(1:1:430),0,'nearest');
-% time_idx_giorno_ott = datetime(string(datestr(idx_giorno_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
+idx_giorno_ott = interp1(Presiduo_k(1:1:430,3,3),hours(1:1:430),0,'nearest');
+time_idx_giorno_ott = datetime(string(datestr(idx_giorno_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
 % idx_sera_ott = interp1(Presiduo_k(end:-1:720,3,3),hours(end:-1:720),0,'nearest');
 % time_idx_sera_ott = datetime(string(datestr(idx_sera_ott/24,'HH:MM')) ,'InputFormat','HH:mm');
 % xline(time_idx_sera_ott,'-r','Deficit Potenza Residua')
-% xline(time_idx_giorno_ott,'-m','Surplus Potenza Residua')
+xline(time_idx_giorno_ott,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Ottobre Caso Peggiore')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
@@ -881,12 +881,12 @@ yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = ' +string(fullCapacity/1000
 %Dicembre Caso peggiore
 subplot(2,2,3)
 plot(time_minutes,Ebat_k(:,4,3)/1000)
-% idx_giorno_dic = interp1(Presiduo_k(1:1:480,4,3),hours(1:1:480),0,'nearest');
-% time_idx_giorno_dic = datetime(string(datestr(idx_giorno_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
+idx_giorno_dic = interp1(Presiduo_k(1:1:480,4,3),hours(1:1:480),0,'nearest');
+time_idx_giorno_dic = datetime(string(datestr(idx_giorno_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
 % idx_sera_dic = interp1(Presiduo_k(end:-1:720,4,3),hours(end:-1:720),0,'nearest');
 % time_idx_sera_dic = datetime(string(datestr(idx_sera_dic/24,'HH:MM')) ,'InputFormat','HH:mm');
 % xline(time_idx_sera_dic,'-r','Deficit Potenza Residua')
-% xline(time_idx_giorno_dic,'-m','Surplus Potenza Residua')
+xline(time_idx_giorno_dic,'-m','Surplus Potenza Residua')
 title('Energia complessiva della batteria Dicembre Caso Peggiore')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
@@ -1064,40 +1064,7 @@ pie(s4,{string(s4(1))+ '€',string(s4(2))+ '€',string(s4(3))+ '€'});
 legend(labels)
 title("Prezzo di sostentamento da rete Enel Dicembre") 
 
-
-%% Grafici (12) ->  Prezzo di ricarica della batteria da rete Enel 
-
-figure(21)
-% Aprile
-labels = {'Soleggiato','Nuvoloso','CasoPeggiore'};
-subplot(2,2,1)
-p1 = price_min * ((capacity-Ebat_aprile*1000)*1.0e-06);
-pie(p1,{string(p1(1))+ '€',string(p1(2))+ '€',string(p1(3))+ '€'});
-legend(labels)
-title("Prezzo di ricarica della batteria da rete Enel Aprile") 
-
-% Agosto
-subplot(2,2,2)
-p2 = price_min * ((capacity-Ebat_agosto*1000)*1.0e-06);
-pie(p2,{string(p2(1))+ '€',string(p2(2))+ '€',string(p2(3))+ '€'});
-legend(labels)
-title("Prezzo di ricarica della batteria da rete Enel Agosto") 
-
-% Ottobre
-subplot(2,2,3)
-p3 = price_min * ((capacity-Ebat_ottobre*1000)*1.0e-06);
-pie(p3,{string(p3(1))+ '€',string(p3(2))+ '€',string(p3(3))+ '€'});
-legend(labels)
-title("Prezzo di ricarica della batteria da rete Enel Ottobre") 
-
-% Dicembre
-subplot(2,2,4)
-p4 = price_min * ((capacity-Ebat_dicembre*1000)*1.0e-06);
-pie(p4,{string(p4(1))+ '€',string(p4(2))+ '€',string(p4(3))+ '€'});
-legend(labels)
-title("Prezzo di ricarica della batteria da rete Enel Dicembre") 
-
-%% Grafici (13) ->  Prezzo mensile di sostentamento da rete Enel 
+%% Grafici (14) ->  Prezzo mensile di sostentamento da rete Enel 
 
 figure(23)
 % Aprile

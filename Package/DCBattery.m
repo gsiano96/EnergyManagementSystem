@@ -91,6 +91,7 @@ classdef DCBattery
                 end
             end
         end
+        
     %Aprile Soleggiato
         function hour_max_battery_1_1 = getHourMaxBattery1_1(obj,Ebat_k,enel_average_power,hours)
             for i=1:1:length(Ebat_k)

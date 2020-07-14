@@ -118,8 +118,8 @@ Prel_r = max(efficiency_k);
 efficiency_r = 0.948; %euro-efficiency
 Pload_med = mean(Pload_k); %TODO
 
-margin=Prel_r * Pindcmax*efficiency_r - Pload_med; %[W] TODO
-Nmin_pannelli = ceil((margin+Pload_med)/(Pnom*efficiency_r));
+margin=(Prel_r * Pindcmax*efficiency_r - Pload_med); %[W] TODO
+Nmin_pannelli = ceil((margin+Pload_med)/(Pnom*efficiency_r))
 
 
 %% - Dimensionamento Potenze campo fotovoltaico -
@@ -791,7 +791,7 @@ for month=1:1:4
     legend('soleggiato','parz. nuvoloso','nuvoloso')
     xlabel 'tempo'
     ylabel 'Energia [kWh]'
-    yline(fullCapacity/1000,'-r','Capacità Batteria = ' + string(fullCapacity/1000) + 'kW');
+    yline(fullCapacity/1000,'-r','Capacitï¿½Batteria = ' + string(fullCapacity/1000) + 'kW');
     yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = ' +string(fullCapacity/1000*0.10)+'kW');
 end
 
@@ -1032,7 +1032,7 @@ ylabel 'Energia [kWh]'
 figure(10)
 
 %NOTA:
-%L'energia residua è la stessa perchè raggiunto il limite di scarica,
+%L'energia residua ï¿½ la stessa perchï¿½ raggiunto il limite di scarica,
 %la batteria si disattiva, e la sua energia rimane costante
 
 X = categorical({'Aprile','Agosto','Ottobre','Dicembre'});
