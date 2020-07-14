@@ -159,9 +159,9 @@ Epv_res_k=cumtrapz(0.0167,Presiduo_k);
 
 %% - Batteria DC senza inverter LG CHEM -
 energy_module = 13.048*1e3;  % [Wh]
-modules = ceil((Pload_med * 4)/(energy_module)) %=5 12 TODO
-fullCapacity = energy_module * modules % Capacità della Batteria in Wh
-capacity =  fullCapacity; % Wh
+modules = ceil((Pload_med * 4)/(energy_module)); %=5 12 TODO
+fullCapacity = energy_module * modules; % Capacità della Batteria in Wh
+capacity =  fullCapacity % Wh
 dod = 0.90; 
 
 Pmax_erogabile = 5*1e3; %[W]
@@ -225,27 +225,27 @@ charging_time = getTimeToReload(Battery,enel_average_power,Ebat_k);
 % massima)
 
 %Aprile
-hour_max_battery_1_1 = getHourMaxBattery1_1(Battery,Ebat_k,enel_average_power,hours);
-hour_max_battery_1_2 = getHourMaxBattery1_2(Battery,Ebat_k,enel_average_power,hours);
-hour_max_battery_1_3 = getHourMaxBattery1_3(Battery,Ebat_k,enel_average_power,hours);
+hour_max_battery_1_1 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,1,1);
+hour_max_battery_1_2 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,1,2);
+hour_max_battery_1_3 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,1,3);
 aprile_bar = [hour_max_battery_1_1,hour_max_battery_1_2,hour_max_battery_1_3];
 
 %Agosto
-hour_max_battery_2_1 = getHourMaxBattery2_1(Battery,Ebat_k,enel_average_power,hours);
-hour_max_battery_2_2 = getHourMaxBattery2_2(Battery,Ebat_k,enel_average_power,hours);
-hour_max_battery_2_3 = getHourMaxBattery2_3(Battery,Ebat_k,enel_average_power,hours);
+hour_max_battery_2_1 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,2,1);
+hour_max_battery_2_2 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,2,2);
+hour_max_battery_2_3 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,2,3);
 agosto_bar = [hour_max_battery_2_1,hour_max_battery_2_2,hour_max_battery_2_3];
 
 %Ottobre
-hour_max_battery_3_1 = getHourMaxBattery3_1(Battery,Ebat_k,enel_average_power,hours);
-hour_max_battery_3_2 = getHourMaxBattery3_2(Battery,Ebat_k,enel_average_power,hours);
-hour_max_battery_3_3 = getHourMaxBattery3_3(Battery,Ebat_k,enel_average_power,hours);
+hour_max_battery_3_1 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,3,1);
+hour_max_battery_3_2 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,3,2);
+hour_max_battery_3_3 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,3,3);
 ottobre_bar = [hour_max_battery_3_1,hour_max_battery_3_2,hour_max_battery_3_3];
 
 %Dicembre
-hour_max_battery_4_1 = getHourMaxBattery4_1(Battery,Ebat_k,enel_average_power,hours);
-hour_max_battery_4_2 = getHourMaxBattery4_2(Battery,Ebat_k,enel_average_power,hours);
-hour_max_battery_4_3 = getHourMaxBattery4_3(Battery,Ebat_k,enel_average_power,hours);
+hour_max_battery_4_1 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,4,1);
+hour_max_battery_4_2 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,4,2);
+hour_max_battery_4_3 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,4,3);
 dicembre_bar = [hour_max_battery_4_1,hour_max_battery_4_2,hour_max_battery_4_3];
 
 

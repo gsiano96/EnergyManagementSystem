@@ -115,10 +115,10 @@ Inverter = Solarmaxinverter(Prel_k,efficiency_k,Pindcmax,Poutacmax, inputVoltage
 
 %% - Ottimizzazione numero di Pannelli - 
 Prel_r = max(efficiency_k);
-efficiency_r = 0.948;
+efficiency_r = 0.948; %Euro-Efficiency media
 
 margin = (Prel_r .* Pindcmax .* efficiency_r) - Pload_med; %[W] 
-Nmin_pannelli = ceil((margin+Pload_med)/(Pnom*efficiency_r)) %/(Pnom*efficiency_r))
+Nmin_pannelli = ceil((margin+Pload_med)/(Pnom * efficiency_r)) 
 
 %% - Dimensionamento Potenze campo fotovoltaico -
 PvField=PhotovoltaicField(Nmin_pannelli,Pnom,Vpanel_mpp,panelPowerTemperatureCoefficient,...
@@ -359,7 +359,7 @@ for month=1:1:4
         hold on
     end
     plot(time_minutes,Pload_k/1000, 'r');
-    legend('soleggiato reale','parz. nuvoloso reale','nuvoloso reale','Pload(k)')
+    legend('soleggiato','parz. nuvoloso','nuvoloso','Pload(k)')
     xlabel 'tempo'
     ylabel 'Ppv-scaled(k) [Kw]'
     title(titles(month))
@@ -379,7 +379,7 @@ for month=1:1:4
         hold on
     end
     plot(time_minutes,Pload_k/1000,'r')
-    legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+    legend('soleggiato','parz. nuvoloso','nuvoloso','Pload(k)')
     title(titles(month))
     xlabel 'tempo'
     ylabel 'Potenze [Kw]'
