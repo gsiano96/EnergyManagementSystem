@@ -46,7 +46,7 @@ classdef DCBattery
             
         end
         
-        function time_charging=getTimeToReload(obj,enel_average_power,Ebat_k)
+        function time_charging=getTimeToReload(obj,enel_average_power,Ebat_k) %TODO
             for i = 1:1:4
                 for j = 1:1:3
                     %starting_energy + enel_average_power * time = capacity
@@ -60,7 +60,7 @@ classdef DCBattery
         function index=getLastStartingDiscargingTime(obj)
         end
         
-        function P_bat= filterPower(obj,Presidual)
+        function P_bat= filterPower(obj,Presidual) %TODO
             % P_batteria
             Presidual_k = zeros(1440,4,3);
             for i=1:1:length(Presidual)

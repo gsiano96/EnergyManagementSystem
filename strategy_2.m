@@ -84,7 +84,6 @@ parallelsPanelsNumber = 1;
 %% Carico
 Pload_k=vector(:,2)*1000; %W 
 
-Pload_med = mean(Pload_k);
 carico=Load(Pload_k);
 
 %Energia assorbita dal carico
@@ -116,10 +115,11 @@ Inverter = Solarmaxinverter(Prel_k,efficiency_k,Pindcmax,Poutacmax, inputVoltage
 
 %% Ottimizzazione numero di Pannelli
 Prel_r = max(efficiency_k);
-efficiency_r = 0.956;
+efficiency_r = 0.948; %euro-efficiency
+Pload_med = mean(Pload_k); %TODO
 
-margin = ((Prel_r .* Pindcmax .* efficiency_r) - Pload_med)  * 1.23; %[W]
-Nmin_pannelli = ceil((margin+Pload_med)/Pnom)
+margin=Prel_r * Pindcmax*efficiency_r - Pload_med; %[W] TODO
+Nmin_pannelli = ceil((margin+Pload_med)/(Pnom*efficiency_r));
 
 
 %% - Dimensionamento Potenze campo fotovoltaico -
@@ -158,8 +158,8 @@ Epv_res_k=cumtrapz(0.0167,Presiduo_k);
 % erogata dal pannello e quella assorbita dal carico
 
 %% - Batteria DC senza inverter LG CHEM -
-energy_module = 13.1*1e3;  % [Wh]
-modules = ceil((Pload_med * 4)/(energy_module)) %12
+energy_module = 13.048*1e3;  % [Wh]
+modules = ceil((Pload_med * 4)/(energy_module)) %=5 12 TODO
 fullCapacity = energy_module * modules % CapacitÃ  della Batteria in Wh
 capacity =  fullCapacity; % Wh
 dod = 0.90; 
@@ -190,7 +190,7 @@ for j=1:1:4
     end
 end
 
-% Percentuali di interesse in input all'inverter
+% Percentuali di interesse in input all'inverter provenienti dalla batteria
 med_targetPrelbat=getMeanTarget(Inverter,Pbat_scarica,Pindcmax); % media
 max_targetPrelbat=getMaxTarget(Inverter,Pbat_scarica,Pindcmax); % massimo
 
@@ -281,17 +281,30 @@ ylabel 'Rendimento [%]'
 
 %% Grafici (2) -> Valori medi di lavoro nella regione di efficienza dell'inverter fotovoltaico
 
+titles=["Caratteristica efficienza inverter Aprile","Caratteristica efficienza inverter Agosto",
+    "Caratteristica efficienza inverter Ottobre","Caratteristica efficienza inverter Dicembre"];
+legends=["soleggiato","parz. nuvoloso","nuvoloso"];
+formats=["-g","-b","-r"];
+
 figure(2)
-%Aprile Soleggiato
-subplot(2,2,1)
-plot(Prel_k*100,efficiency_k*100)
-xline(med_targetPrel(1,1,1)*100,'-g','Prel media =' + string(med_targetPrel(1,1,1)*100) + '%');
-xline(max_targetPrel(1,1,1)*100,'-r','Prel max=' + string(max_targetPrel(1,1,1)*100)+ '%');
-title("Caratteristica efficienza inverter Aprile Soleggiato") 
-xlabel 'Prel [%]'
-ylabel 'Efficienza [%]'
+
+h=zeros(1,3);
+for month=1:1:4
+    subplot(2,2,month)
+    plot(Prel_k*100,efficiency_k*100)
+    for caso=1:1:3
+        xline(med_targetPrel(1,month,caso)*100,formats(caso),'Prel media = ' + string(med_targetPrel(1,month,caso)*100) + '%');
+        h(caso)=xline(max_targetPrel(1,month,caso)*100,formats(caso),'Prel max = ' + string(max_targetPrel(1,month,caso)*100)+ '%');
+    end
+    legend(h,legends)
+    title(titles(month)) 
+    xlabel 'Prel [%]'
+    ylabel 'Efficienza [%]'
+end
+
 
 %Aprile Nuvoloso 
+%{
 subplot(2,2,2)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,1,2)*100,'-g','Prel media =' + string(med_targetPrel(1,1,2)*100) + '%');
@@ -333,7 +346,7 @@ subplot(2,2,3)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,2,3)*100,'-g','Prel media =' + string(med_targetPrel(1,2,3)*100)+ '%');
 xline(max_targetPrel(1,2,3)*100,'-r','Prel max=' + string(max_targetPrel(1,2,3)*100)+ '%');
-title("Caratteristica efficienza inverter Agosto Caso peggiore") 
+title(" Caso peggiore") 
 xlabel 'Prel [%]'
 ylabel 'Efficienza [%]'
 
@@ -361,7 +374,7 @@ subplot(2,2,3)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,3,3)*100,'-g','Prel media =' + string(med_targetPrel(1,3,3)*100)+ '%');
 xline(max_targetPrel(1,3,3)*100,'-r','Prel max=' + string(max_targetPrel(1,3,3)*100)+ '%');
-title("Caratteristica efficienza inverter Ottobre Caso peggiore") 
+title("") 
 xlabel 'Prel [%]'
 ylabel 'Efficienza [%]'
 
@@ -371,7 +384,7 @@ subplot(2,2,1)
 plot(Prel_k*100,efficiency_k*100)
 xline(med_targetPrel(1,4,1)*100,'-g','Prel media =' + string(med_targetPrel(1,4,1)*100)+ '%');
 xline(max_targetPrel(1,4,1)*100,'-r','Prel max=' + string(max_targetPrel(1,4,1)*100)+ '%');
-title("Caratteristica efficienza inverter Dicembre Soleggiato") 
+title(" Soleggiato") 
 xlabel 'Prel [%]'
 ylabel 'Efficienza [%]'
 
@@ -392,36 +405,52 @@ xline(max_targetPrel(1,4,3)*100,'-r','Prel max=' + string(max_targetPrel(1,4,3)*
 title("Caratteristica efficienza inverter Dicembre Caso peggiore") 
 xlabel 'Prel [%]'
 ylabel 'Efficienza [%]'
+%}
 
+%% Grafici (3) -> Prel medio (del valore medio e massimo) per tutti i mesi e casi della potenza di scarica della batteria e di quella del fotovoltaico
 
-%% Grafici (3) -> Valori medi di lavoro nella regione di efficienza dell'inverter fotovoltaico Batteria
+figure(3)
 
-figure(6)
-%Aprile 
+legends=["Prel med-max batt.","Prel med-max fotovoltaico"];
+formats=["-r","-g"];
+h=zeros(1,2);
+
 plot(Prel_k*100,efficiency_k*100)
-xline(mean(med_targetPrelbat(:))*100,'-g','Prel media =' + string(mean(med_targetPrelbat(:))*100)+ '%');
-xline(max(max_targetPrelbat(:))*100,'-r','Prel max =' + string(max(max_targetPrelbat(:))*100)+ '%');
-title("Caratteristica efficienza inverter-batteria") 
+
+xline(mean(med_targetPrelbat(:))*100,formats(1),'Prel media = ' + string(mean(med_targetPrelbat(:))*100)+ '%');
+h(1)=xline(mean(max_targetPrelbat(:))*100,formats(1),'Prel max = ' + string(mean(max_targetPrelbat(:))*100)+ '%');
+
+xline(mean(med_targetPrel(:))*100,formats(2),'Prel media = ' + string(mean(med_targetPrel(:))*100)+ '%');
+h(2)=xline(mean(max_targetPrel(:))*100,formats(2),'Prel max = ' + string(mean(max_targetPrel(:))*100)+ '%');
+
+title("Efficienza inverter")
+legend(h,legends)
 xlabel 'Prel [%]'
 ylabel 'Efficienza [%]'
 
-
-
 %% Grafici (4) -> Potenze fotovoltaico - potenze in uscita dall'inverter
 
-figure(7)
+figure(4)
 
-% Dicembre
-subplot(2,2,1)
-for i=1:1:3
-    plot(Ppv_k_scaled(:,4,i)/1000,Ppv_out_k(:,4,i)/1000)
-    hold on
+titles=["Potenza del fotovoltaico in uscita dall'inverter Aprile",...
+    "Potenza del fotovoltaico in uscita dall'inverter Agosto",...
+    "Potenza del fotovoltaico in uscita dall'inverter Ottobre",...
+    "Potenza del fotovoltaico in uscita dall'inverter Dicembre"];
+    
+for month=1:1:4
+    subplot(2,2,month)
+    for caso=1:1:3
+        plot(Ppv_k_scaled(:,month,caso)/1000,Ppv_out_k(:,month,caso)/1000)
+        hold on
+    end
+    title(titles(month))
+    legend('soleggiato','parz. nuvoloso','nuvoloso');
+    xlabel 'Ppv_k_scaled(k) [Kw]'
+    ylabel 'Ppv-out(k) [Kw]'
 end
-legend('soleggiato','nuvoloso','caso peggiore');
-xlabel 'Ppv_k_scaled(k) [Kw]'
-ylabel 'Ppv-out(k) [Kw]'
-title("Potenza del fotovoltaico in uscita dall'inverter Dicembre")
 
+
+%{
 % Aprile
 subplot(2,2,2)
 for i=1:1:3
@@ -431,7 +460,7 @@ end
 legend('soleggiato','nuvoloso','caso peggiore');
 xlabel 'Ppv_k_scaled(k) [Kw]'
 ylabel 'Ppv-out(k) [Kw]'
-title("Potenza del fotovoltaico in uscita dall'inverter Aprile")
+title()
 
 
 % Agosto
@@ -443,7 +472,7 @@ end
 legend('soleggiato','nuvoloso','caso peggiore');
 xlabel 'Ppv_k_scaled(k) [Kw]'
 ylabel 'Ppv-out(k) [Kw]'
-title("Potenza del fotovoltaico in uscita dall'inverter Agosto")
+title()
 
 
 % Ottobre
@@ -455,23 +484,30 @@ end
 legend('soleggiato','nuvoloso','caso peggiore');
 xlabel 'Ppv_k_scaled(k) [Kw]'
 ylabel 'Ppv-out(k) [Kw]'
-title("Potenza del fotovoltaico in uscita dall'inverter Ottobre")
+title()
+%}
 
-%% Grafici (5) -> Grafici potenze fotovoltaico per tutti i mesi e casi
+%% Grafici (5) -> Potenze fotovoltaico per tutti i mesi e casi
 
-figure(8)
-%Aprile
-subplot(2,2,1)
-for i=1:1:3
-    plot(time_minutes,Ppv_k(:,1,i)/1000);
-    hold on
+figure(5)
+
+titles=["Aprile","Agosto","Ottobre","Dicembre"];
+
+for month=1:1:4
+    subplot(2,2,month)
+    for caso=1:1:3
+        plot(time_minutes,Ppv_k(:,month,caso)/1000);
+        hold on
+    end
+    plot(time_minutes,Pload_k/1000, 'r');
+    legend('soleggiato','parz. nuvoloso','nuvoloso','Pload(k)')
+    xlabel 'tempo'
+    ylabel 'Ppv(k) [Kw]'
+    title(titles(month))
 end
-plot(time_minutes,Pload_k/1000, 'r');
-legend('soleggiato','parz. nuvoloso','nuvoloso','Pload(k)')
-xlabel 'time'
-ylabel 'Ppv(k) [Kw]'
-title 'Aprile'
+ 
 
+%{
 %Agosto
 subplot(2,2,2)
 for i=1:1:3
@@ -507,10 +543,32 @@ legend('soleggiato','parz. nuvoloso','nuvoloso','Pload(k)')
 xlabel 'time'
 ylabel 'Ppv(k) [Kw]'
 title 'Dicembre'
+%}
 
-%% Grafici (6) -> Effetto di scalatura della potenza dovuto alla temperatura
+%% Grafici (6) -> Potenze fotovoltaico per tutti i mesi e casi scalate considerando la temperatura
 
-figure(9)
+figure(6)
+
+titles=["Aprile","Agosto","Ottobre","Dicembre"];
+
+for month=1:1:4
+    subplot(2,2,month)
+    for caso=1:1:3
+        plot(time_minutes,Ppv_k_scaled(:,month,caso)/1000);
+        hold on
+    end
+    plot(time_minutes,Pload_k/1000, 'r');
+    legend('soleggiato reale','parz. nuvoloso reale','nuvoloso reale','Pload(k)')
+    xlabel 'tempo'
+    ylabel 'Ppv-scaled(k) [Kw]'
+    title(titles(month))
+end
+
+% I mesi Aprile, Ottobre e Dicembre 
+% non risentono dell'effetto di scalatura della potenza dovuto
+% alla temperatura, essendo questa al di sotto di 25ï¿½C
+
+%{
 % Aprile
 subplot(2,2,1)
 plot(time_minutes,Ppv_k(:,1,1)/1000);
@@ -550,10 +608,6 @@ title('Dicembre')
 legend('soleggiato-STC','soleggiato')
 xlabel 'time'
 ylabel 'Ppv(k)'
-
-% I mesi Aprile, Ottobre e Dicembre 
-% non risentono dell'effetto di scalatura della potenza dovuto
-% alla temperatura, essendo questa al di sotto di 25ï¿½C
 
 figure(10)
 % Aprile
@@ -644,28 +698,28 @@ ylabel 'Ppv(k)'
 % I mesi Aprile, Ottobre e Dicembre 
 % non risentono dell'effetto di scalatura della potenza dovuto
 % alla temperatura, essendo questa al di sotto di 25ï¿½C
+%}
 
+%% Grafici (7) -> Potenza residua in AC e di carico per tutti i mesi e casi
 
-%% Grafici (7) -> Potenze Residue e di Carico per tutti i mesi e casi
+figure(7)
 
-figure(12)
-% Aprile
-subplot(2,2,1)
-for i=1:1:3
-    plot(time_minutes,Presiduo_k(:,1,i)/1000)
-    hold on
-%     idx_giorno_apr(i) = interp1(Presiduo_k(1:1:720,1,i),hours(1:1:720),0,'nearest');
-%     time_idx_giorno_apr = datetime(string(datestr(idx_giorno_apr/24,'HH:MM')) ,'InputFormat','HH:mm')
-%     idx_sera_apr(i) = interp1(Presiduo_k(end:-1:720,1,i),hours(end:-1:720),0,'nearest')
-%     time_idx_sera_apr = datetime(string(datestr(idx_sera_apr/24,'HH:MM')) ,'InputFormat','HH:mm')
-%     xline(time_idx_sera_apr(i),'-r','punto')
-%     xline(time_idx_giorno_apr(i),'-m','punto')
+titles=["Presiduo Aprile", "Presiduo Agosto","Presiduo Ottobre","Presiduo Dicembre"];
+
+for month=1:1:4
+    subplot(2,2,month)
+    for caso=1:1:3
+        plot(time_minutes,Presiduo_k(:,month,caso)/1000)
+        hold on
+    end
+    plot(time_minutes,Pload_k/1000,'r')
+    legend('soleggiato', 'nuvoloso', 'caso peggiore','Pload(k)')
+    title(titles(month))
+    xlabel 'tempo'
+    ylabel 'Potenze [Kw]'
 end
-legend('soleggiato', 'nuvoloso', 'caso peggiore')
-title('Presiduo(k) Aprile')
-xlabel 'ore'
-ylabel 'Potenze [Kw]'
 
+%{
 % Agosto
 subplot(2,2,2)
 for i=1:1:3
@@ -716,26 +770,32 @@ legend('soleggiato', 'nuvoloso', 'caso peggiore')
 title('Presiduo(k) Dicembre')
 xlabel 'ore'
 ylabel 'Potenze [Kw]'
+%}
 
+%% Grafici (8) -> Evoluzione energetica della batteria 
 
-%% Grafici (8) -> Evoluzione energetica della Batteria 
+figure(8)
 
-figure(13)
-%Aprile Soleggiato
-subplot(2,2,1)
-plot(time_minutes,Ebat_k(:,1,1)/1000)
-% idx_giorno_apr = interp1(Presiduo_k(1:1:720,1,1),hours(1:1:720),0,'nearest');
-% time_idx_giorno_apr = datetime(string(datestr(idx_giorno_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
-% idx_sera_apr = interp1(Presiduo_k(end:-1:720,1,1),hours(end:-1:720),0,'nearest');
-% time_idx_sera_apr = datetime(string(datestr(idx_sera_apr/24,'HH:MM')) ,'InputFormat','HH:mm');
-% xline(time_idx_sera_apr,'-r','Deficit Potenza Residua')
-% xline(time_idx_giorno_apr,'-m','Surplus Potenza Residua')
-title('Energia complessiva della batteria Aprile Soleggiato')
-xlabel 'ore'
-ylabel 'Energia [kWh]'
-yline(fullCapacity/1000,'-r','CapacitÃ Batteria = ' + string(fullCapacity/1000) + 'kW');
-yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = ' +string(fullCapacity/1000*0.10)+'kW');
+titles=["Energia della batteria Aprile",...
+    "Energia della batteria Agosto",...
+    "Energia della batteria Ottobre",...
+    "Energia della batteria Dicembre"];
 
+for month=1:1:4
+    subplot(2,2,month)
+    for caso=1:1:3
+        plot(time_minutes,Ebat_k(:,month,caso)/1000)
+        hold on
+    end
+    title(titles(month))
+    legend('soleggiato','parz. nuvoloso','nuvoloso')
+    xlabel 'tempo'
+    ylabel 'Energia [kWh]'
+    yline(fullCapacity/1000,'-r','Capacità Batteria = ' + string(fullCapacity/1000) + 'kW');
+    yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = ' +string(fullCapacity/1000*0.10)+'kW');
+end
+
+%{
 %Aprile Nuvoloso 
 subplot(2,2,2)
 plot(time_minutes,Ebat_k(:,1,2)/1000)
@@ -908,22 +968,28 @@ xlabel 'ore'
 ylabel 'Energia [kWh]'
 yline(fullCapacity/1000,'-r','CapacitÃ Batteria = ' + string(fullCapacity/1000) + 'kW');
 yline(fullCapacity/1000*0.10,'-r','LimiteDiScarica = ' +string(fullCapacity/1000*0.10)+'kW');
+%}
 
-%% Grafici (7) ->  Evoluzione energetica del sistema
-figure(17)
+%% Grafici (9) ->  Evoluzione energetica in AC del fotovoltaico
+figure(9)
 
-% Aprile
-subplot(2,2,1)
-for i=1:1:3
-    plot(time_minutes,Epv_out_k(:,1,i)/1000)
-    hold on
-    yline((capacity+Eload_k(1440))/1000,'-r','Energia totale assorbita='+string((capacity+Eload_k(1440))/1000)+'kW');
+titles=["Energia fotovoltaico ad Aprile","Energia fotovoltaico ad Agosto",...
+    "Energia fotovoltaico ad Ottobre","Energia fotovoltaico a Dicembre"];
+
+for month=1:1:4
+    subplot(2,2,month)
+    for caso=1:1:3
+        plot(time_minutes,Epv_out_k(:,month,caso)/1000)
+        hold on
+    end
+    legend('soleggiato', 'parz. nuvoloso', 'nuvoloso')
+    %yline((capacity+Eload_k(1440))/1000,'-r','Energia totale assorbita='+string((capacity+Eload_k(1440))/1000)+'kW');
+    title(titles(month))
+    xlabel 'tempo'
+    ylabel 'Energia [kWh]'
 end
-legend('soleggiato', 'nuvoloso', 'caso peggiore')
-title('Energia complessiva prodotta ad Aprile')
-xlabel 'ore'
-ylabel 'Energia [kWh]'
 
+%{
 % Agosto
 subplot(2,2,2)
 for i=1:1:3
@@ -960,9 +1026,14 @@ legend('soleggiato', 'nuvoloso', 'caso peggiore')
 title('Energia complessiva prodotta a Dicembre')
 xlabel 'ore'
 ylabel 'Energia [kWh]'
+%}
 
-%% Grafici (8) -> Energia Residua in batteria a fine giornata
-figure(18)
+%% Grafici (10) -> Energia Residua in batteria a fine giornata
+figure(10)
+
+%NOTA:
+%L'energia residua è la stessa perchè raggiunto il limite di scarica,
+%la batteria si disattiva, e la sua energia rimane costante
 
 X = categorical({'Aprile','Agosto','Ottobre','Dicembre'});
 % Aprile
@@ -987,8 +1058,9 @@ legend ({'Soleggiato','Nuvoloso','CasoPeggiore'});
 title("Energia residua in batteria al termine della giornata") ;
 
 
-%% Grafici (9) ->  Ore di ricarica richieste dalla batteria
-figure(19)
+%% Grafici (11) ->  Ore di ricarica richieste dalla batteria
+
+figure(11)
 X = categorical({'Aprile','Agosto','Ottobre','Dicembre'});
 h1 =(charging_time(1,:));
 h2 =(charging_time(2,:));
@@ -1000,16 +1072,16 @@ legend ({'Soleggiato','Nuvoloso','CasoPeggiore'});
 title("Ore di ricarica richieste dalla batteria ") ;
 
 
-%% Grafici (10) ->  Ore fino a che possiamo scaricare la batteria
-figure(20)
+%% Grafici (12) ->  Ore fino a che possiamo scaricare la batteria
+figure(12)
 X = categorical({'Aprile','Agosto','Ottobre','Dicembre'});
 otot=[aprile_bar;agosto_bar;ottobre_bar;dicembre_bar];
 bar(X,otot)
 legend ({'Soleggiato','Nuvoloso','CasoPeggiore'}); 
 title("Orario di partenza della fase di ricarica della batteria ");
 
-%% Grafici (11) ->  Costi d'acquisto Energia 
-figure(21)
+%% Grafici (13) ->  Costi d'acquisto Energia 
+figure(13)
 plot(costi)
 xlabel('Ore del giorno')
 ylabel('Costo (ï¿½/MWh)')
@@ -1018,9 +1090,10 @@ axis([1 24 30 70])
 
 
 
-%% Grafici (12) ->  Prezzo mensile di sostentamento da rete Enel 
+%% Grafici (14) ->  Prezzo mensile di sostentamento da rete Enel 
 
-figure(22)
+figure(14)
+
 % Aprile
 labels = {'Soleggiato','Nuvoloso','CasoPeggiore'};
 subplot(2,2,1)
@@ -1051,9 +1124,10 @@ legend(labels)
 title("Prezzo di sostentamento da rete Enel Dicembre") 
 
 
-%% Grafici (13) ->  Prezzo di ricarica della batteria da rete Enel 
+%% Grafici (15) ->  Prezzo di ricarica della batteria da rete Enel 
 
-figure(23)
+figure(15)
+
 % Aprile
 labels = {'Soleggiato','Nuvoloso','CasoPeggiore'};
 subplot(2,2,1)
@@ -1083,9 +1157,10 @@ pie(p4,{string(p4(1))+ 'ï¿½',string(p4(2))+ 'ï¿½',string(p4(3))+ 'ï¿½'});
 legend(labels)
 title("Prezzo di ricarica della batteria da rete Enel Dicembre") 
 
-%% Grafici (14) ->  Prezzo mensile di sostentamento da rete Enel 
+%% Grafici (16) ->  Prezzo mensile di sostentamento da rete Enel 
 
-figure(24)
+figure(16)
+
 % Aprile
 labels = {'Soleggiato','Nuvoloso','CasoPeggiore'};
 subplot(2,2,1)

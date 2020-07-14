@@ -56,7 +56,7 @@ T_k(:,4,1)=IrradianzaDicembre.T;
 %% - Potenza nominale in condizioni STC -
 % STC <=> T=25°C, G(t)=1000 w/m^2 (massima irradianza)
 Pnom=327;
-Npannelli=110;
+Npannelli=307;
 Pnompv=Pnom*Npannelli;
 
 %% - Potenze generate dal fotovoltaico nei mesi -
@@ -193,8 +193,8 @@ efficiency_k=[0;efficiency_k];
 % Efficiency è data dalla formula dell'euro-efficienza
 
 % ATTENZIONE non possiamo scendere sotto i 120Kw per non avere un fenomeno di power clipping
-Pinput_max=130*1000; %w in DC
-Poutput_max=100*1000; %w in AC
+Pinput_max=105*1000; %w in DC
+Poutput_max=80*1000; %w in AC
 
 Pinput_k=Prel_k*Pinput_max;
 %cfr. Pinput_k con Ppv_k per vedere la potenza in ingresso
@@ -383,7 +383,7 @@ ylabel 'Potenze [Kw]'
 % Presiduo positivo => Potenza fornita alla batteria
 
 %% - Residuo energetico per batteria -
-capacitaBatteria = 205.8*1e3; %205.8 Kwh in [wh]
+capacitaBatteria = 210*1e3; %205.8 Kwh in [wh]
 
 % Non tutta la potenza residua è utilizzata per scaricare/caricare la
 % batteria in quanto il flusso energetico in uscita/ingresso è frazionato
