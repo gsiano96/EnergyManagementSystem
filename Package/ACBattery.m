@@ -110,7 +110,7 @@ classdef ACBattery
             end
             ora_dell_ore_di_ricarica_1_1 = [hours,ore_di_ricarica(:,x,y)];
             for i=1:1:length(Ebat_k)
-                if(ore_di_ricarica(i,x,y)+ ora_dell_ore_di_ricarica_1_1(i,1) >= 23.98 & ore_di_ricarica(i,x,y)+ ora_dell_ore_di_ricarica_1_1(i,1) <= 24)
+                if(ore_di_ricarica(i,x,y)+ ora_dell_ore_di_ricarica_1_1(i,1) >= 23.97 & ore_di_ricarica(i,x,y)+ ora_dell_ore_di_ricarica_1_1(i,1) <= 24)
                     %scarica la batteria
                     a1 = ora_dell_ore_di_ricarica_1_1(i,1);
                 end

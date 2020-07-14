@@ -118,7 +118,7 @@ Prel_r = max(efficiency_k);
 efficiency_r = 0.948;
 
 margin = (Prel_r .* Pindcmax .* efficiency_r) - Pload_med; %[W] 
-Nmin_pannelli = ceil((margin+Pload_med)/Pnom) %/(Pnom*efficiency_r))
+Nmin_pannelli = ceil((margin+Pload_med)/(Pnom*efficiency_r)) %/(Pnom*efficiency_r))
 
 %% - Dimensionamento Potenze campo fotovoltaico -
 PvField=PhotovoltaicField(Nmin_pannelli,Pnom,Vpanel_mpp,panelPowerTemperatureCoefficient,...
