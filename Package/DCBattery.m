@@ -57,40 +57,36 @@ classdef DCBattery
             end
         end
         
-        function index=getLastStartingDiscargingTime(obj)
-        end
         
-        function P_bat= filterPower(obj,Presidual) %TODO
+        
+        function Pbat_k= filterPower(obj,Pinput)
             % P_batteria
-            Presidual_k = zeros(1440,4,3);
-            for i=1:1:length(Presidual)
+            Pbat_k = zeros(1440,4,3);
+            for i=1:1:length(Pinput)
                 for j=1:1:4
                     for k=1:1:3
-                        if Presidual(i,j,k) > 0
-                            Presidual_k(i,j,k) = Presidual(i,j,k)*obj.Befficiency;
-                            %Presidual_k(i,j,k)=Pin_k(i,j,k)-P_load(i);
+                        if Pinput(i,j,k) > 0
+                            Pbat_k(i,j,k) = Pinput(i,j,k)*obj.Befficiency;
                         else
-                            Presidual_k(i,j,k) = Presidual(i,j,k);
+                            Pbat_k(i,j,k) = Pinput(i,j,k)*obj.Befficiency; %TODO
                         end
                     end
                 end
             end
-            P_bat=Presidual_k;
         end
         
         function [Pbat_carica,Pbat_scarica] = decouplePowerBattery(obj,Pbat)
             for i=1:1:length(Pbat)
-                
                 if Pbat(i) >= 0
                     Pbat_carica(i) = Pbat(i);
                     Pbat_scarica(i) = 0;
-                    %Presidual_k(i,j,k)=Pin_k(i,j,k)-P_load(i);
                 else
                     Pbat_carica(i) = 0;
                     Pbat_scarica(i) = - Pbat(i);
                 end
             end
         end
+        
     %Aprile Soleggiato
         function hour_max_battery_1_1 = getHourMaxBattery1_1(obj,Ebat_k,enel_average_power,hours)
             for i=1:1:length(Ebat_k)

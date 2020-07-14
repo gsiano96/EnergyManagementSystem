@@ -101,7 +101,7 @@ efficiency_k=[0;efficiency_k];
 
 % ATTENZIONE OTTIMIZZAZIONE INVERTER
 Pindcmax = 105*1e3;  %nominal P DC
-Poutacmax = 80*1e3; %max P AC 
+Poutacmax = 88*1e3; %max P AC TODO
 
 inputVoltageInterval = [430,900];
 outputVoltageInterval = 400; 
@@ -140,7 +140,6 @@ max_targetPrel=getMaxTarget(Inverter,Ppv_k_scaled,Pindcmax); % massimo
 
 %Energia del fotvoltaico
 Epv_out_k=cumtrapz(0.0167,Ppv_out_k);
-%figure(),plot(time_minutes,Epv_out_k(:,1,1)/1000), title 'Energia del fotvoltaico'
 
 %% - Calcolo della Potenza Residua -
 %Differenza tra potenza erogata dal pannello e potenza assorbita dal carico
@@ -152,28 +151,21 @@ end
 
 %Energia residua fotvoltaico-carico
 Epv_res_k=cumtrapz(0.0167,Presiduo_k);
-%figure(),plot(time_minutes,Epv_res_k(:,1,1)/1000), title 'Energia residua del sistema pannello-carico'
-
-% Calcolo del punti in cui abbiamo la completa compensazione tra la potenza 
-% erogata dal pannello e quella assorbita dal carico
 
 %% - Batteria DC senza inverter LG CHEM -
 energy_module = 13.048*1e3;  % [Wh]
-modules = ceil((Pload_med * 4)/(energy_module)) %=5 12 TODO
-fullCapacity = energy_module * modules % Capacità della Batteria in Wh
+margin_hours=4;
+modules = ceil((Pload_med * margin_hours)/(energy_module)); %=5 12 TODO
+fullCapacity = energy_module * modules; % Capacità della Batteria in Wh
 capacity =  fullCapacity; % Wh
 dod = 0.90; 
 
 Pmax_erogabile = 5*1e3; %[W]
-P_bat_k = Pmax_erogabile * 12; %W
+Pbatmax = Pmax_erogabile * modules; %W
 
-%Nella fase di carica della batteria, avremo delle perdite di potenza
-%dovute all'efficienza della Batteria.
-%Nella fase di scarica, avremo altre perdite di potenza dovute
-%all'effcienza dell'inverter del fotovoltaico.
 Befficiency = 0.95; % Rendimento della Batteria
 
-Battery = DCBattery(capacity, dod,P_bat_k,Befficiency);
+Battery = DCBattery(capacity,dod,Pbatmax,Befficiency);
 
 %Lato DC
 P_bat = filterPower(Battery,Presiduo_k);
