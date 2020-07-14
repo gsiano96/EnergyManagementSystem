@@ -99,8 +99,8 @@ classdef ACBattery
             end
         end
         
-        %Aprile Soleggiato
-        function hour_max_battery_1_1 = getHourMaxBattery1_1(obj,Ebat_k,enel_average_power,hours)
+       
+        function hour_max_battery = getHourMaxBattery(obj,Ebat_k,enel_average_power,hours,x,y)
             for i=1:1:length(Ebat_k)
                 for j=1:1:4
                     for k=1:1:3
@@ -108,226 +108,15 @@ classdef ACBattery
                     end
                 end
             end
-            ora_dell_ore_di_ricarica_1_1 = [hours,ore_di_ricarica(:,1,1)];
+            ora_dell_ore_di_ricarica_1_1 = [hours,ore_di_ricarica(:,x,y)];
             for i=1:1:length(Ebat_k)
-                if(ore_di_ricarica(i,1,1)+ ora_dell_ore_di_ricarica_1_1(i,1) >= 23.98 & ore_di_ricarica(i,1,1)+ ora_dell_ore_di_ricarica_1_1(i,1) <= 24)
+                if(ore_di_ricarica(i,x,y)+ ora_dell_ore_di_ricarica_1_1(i,1) >= 23.98 & ore_di_ricarica(i,x,y)+ ora_dell_ore_di_ricarica_1_1(i,1) <= 24)
                     %scarica la batteria
                     a1 = ora_dell_ore_di_ricarica_1_1(i,1);
                 end
             end
-             hour_max_battery_1_1 = timeofday(datetime(string(datestr(a1/24,'HH:MM')) ,'InputFormat','HH:mm'));
+             hour_max_battery= timeofday(datetime(string(datestr(a1/24,'HH:MM')) ,'InputFormat','HH:mm'));
         end
         
-        %Aprile Nuvoloso
-        function hour_max_battery_1_2 = getHourMaxBattery1_2(obj,Ebat_k,enel_average_power,hours)
-            for i=1:1:length(Ebat_k)
-                for j=1:1:4
-                    for k=1:1:3
-                        ore_di_ricarica(i,j,k) = (obj.capacity - Ebat_k(i,j,k))/enel_average_power;
-                    end
-                end
-            end
-            ora_dell_ore_di_ricarica_1_2 = [hours,ore_di_ricarica(:,1,2)];
-            for i=1:1:length(Ebat_k)
-                if(ore_di_ricarica(i,1,2)+ ora_dell_ore_di_ricarica_1_2(i,1) >= 23.98 & ore_di_ricarica(i,1,2)+ ora_dell_ore_di_ricarica_1_2(i,1) <= 24)
-                    %scarica la batteria
-                    a2 = ora_dell_ore_di_ricarica_1_2(i,1);
-                end
-            end
-             hour_max_battery_1_2 = timeofday(datetime(string(datestr(a2/24,'HH:MM')) ,'InputFormat','HH:mm'));
-        end
-        
-         %Aprile Caso Peggiore
-        function hour_max_battery_1_3 = getHourMaxBattery1_3(obj,Ebat_k,enel_average_power,hours)
-            for i=1:1:length(Ebat_k)
-                for j=1:1:4
-                    for k=1:1:3
-                        ore_di_ricarica(i,j,k) = (obj.capacity - Ebat_k(i,j,k))/enel_average_power;
-                    end
-                end
-            end
-            ora_dell_ore_di_ricarica_1_3 = [hours,ore_di_ricarica(:,1,3)];
-            for i=1:1:length(Ebat_k)
-                if(ore_di_ricarica(i,1,3)+ ora_dell_ore_di_ricarica_1_3(i,1) >= 23.98 & ore_di_ricarica(i,1,3)+ ora_dell_ore_di_ricarica_1_3(i,1) <= 24)
-                    %scarica la batteria
-                    a3 = ora_dell_ore_di_ricarica_1_3(i,1);
-                end
-            end
-             hour_max_battery_1_3 = timeofday(datetime(string(datestr(a3/24,'HH:MM')) ,'InputFormat','HH:mm'));
-        end
-        
-         %Agosto Soleggiato
-        function hour_max_battery_2_1 = getHourMaxBattery2_1(obj,Ebat_k,enel_average_power,hours)
-            for i=1:1:length(Ebat_k)
-                for j=1:1:4
-                    for k=1:1:3
-                        ore_di_ricarica(i,j,k) = (obj.capacity - Ebat_k(i,j,k))/enel_average_power;
-                    end
-                end
-            end
-            ora_dell_ore_di_ricarica_2_1 = [hours,ore_di_ricarica(:,2,1)];
-            for i=1:1:length(Ebat_k)
-                if(ore_di_ricarica(i,2,1)+ ora_dell_ore_di_ricarica_2_1(i,1) >= 23.98 & ore_di_ricarica(i,2,1)+ ora_dell_ore_di_ricarica_2_1(i,1) <= 24)
-                    %scarica la batteria
-                    a1 = ora_dell_ore_di_ricarica_2_1(i,1);
-                end
-            end
-             hour_max_battery_2_1 = timeofday(datetime(string(datestr(a1/24,'HH:MM')) ,'InputFormat','HH:mm'));
-        end
-        
-        %Agosto Nuvoloso
-        function hour_max_battery_2_2 = getHourMaxBattery2_2(obj,Ebat_k,enel_average_power,hours)
-            for i=1:1:length(Ebat_k)
-                for j=1:1:4
-                    for k=1:1:3
-                        ore_di_ricarica(i,j,k) = (obj.capacity - Ebat_k(i,j,k))/enel_average_power;
-                    end
-                end
-            end
-            ora_dell_ore_di_ricarica_2_2 = [hours,ore_di_ricarica(:,2,2)];
-            for i=1:1:length(Ebat_k)
-                if(ore_di_ricarica(i,2,2)+ ora_dell_ore_di_ricarica_2_2(i,1) >= 23.98 & ore_di_ricarica(i,2,2)+ ora_dell_ore_di_ricarica_2_2(i,1) <= 24)
-                    %scarica la batteria
-                    a2 = ora_dell_ore_di_ricarica_2_2(i,1);
-                end
-            end
-             hour_max_battery_2_2 = timeofday(datetime(string(datestr(a2/24,'HH:MM')) ,'InputFormat','HH:mm'));
-        end
-        
-         %Agosto Caso Peggiore
-        function hour_max_battery_2_3 = getHourMaxBattery2_3(obj,Ebat_k,enel_average_power,hours)
-            for i=1:1:length(Ebat_k)
-                for j=1:1:4
-                    for k=1:1:3
-                        ore_di_ricarica(i,j,k) = (obj.capacity - Ebat_k(i,j,k))/enel_average_power;
-                    end
-                end
-            end
-            ora_dell_ore_di_ricarica_2_3 = [hours,ore_di_ricarica(:,2,3)];
-            for i=1:1:length(Ebat_k)
-                if(ore_di_ricarica(i,2,3)+ ora_dell_ore_di_ricarica_2_3(i,1) >= 23.98 & ore_di_ricarica(i,2,3)+ ora_dell_ore_di_ricarica_2_3(i,1) <= 24)
-                    %scarica la batteria
-                    a3 = ora_dell_ore_di_ricarica_2_3(i,1);
-                end
-            end
-             hour_max_battery_2_3 = timeofday(datetime(string(datestr(a3/24,'HH:MM')) ,'InputFormat','HH:mm'));
-        end
-        
-        %Ottobre Soleggiato
-        function hour_max_battery_3_1 = getHourMaxBattery3_1(obj,Ebat_k,enel_average_power,hours)
-            for i=1:1:length(Ebat_k)
-                for j=1:1:4
-                    for k=1:1:3
-                        ore_di_ricarica(i,j,k) = (obj.capacity - Ebat_k(i,j,k))/enel_average_power;
-                    end
-                end
-            end
-            ora_dell_ore_di_ricarica_3_1 = [hours,ore_di_ricarica(:,3,1)];
-            for i=1:1:length(Ebat_k)
-                if(ore_di_ricarica(i,3,1)+ ora_dell_ore_di_ricarica_3_1(i,1) >= 23.98 & ore_di_ricarica(i,3,1)+ ora_dell_ore_di_ricarica_3_1(i,1) <= 24)
-                    %scarica la batteria
-                    a1 = ora_dell_ore_di_ricarica_3_1(i,1);
-                end
-            end
-             hour_max_battery_3_1 = timeofday(datetime(string(datestr(a1/24,'HH:MM')) ,'InputFormat','HH:mm'));
-        end
-        
-        %Ottobre Nuvoloso
-        function hour_max_battery_3_2 = getHourMaxBattery3_2(obj,Ebat_k,enel_average_power,hours)
-            for i=1:1:length(Ebat_k)
-                for j=1:1:4
-                    for k=1:1:3
-                        ore_di_ricarica(i,j,k) = (obj.capacity - Ebat_k(i,j,k))/enel_average_power;
-                    end
-                end
-            end
-            ora_dell_ore_di_ricarica_3_2 = [hours,ore_di_ricarica(:,3,2)];
-            for i=1:1:length(Ebat_k)
-                if(ore_di_ricarica(i,3,2)+ ora_dell_ore_di_ricarica_3_2(i,1) >= 23.98 & ore_di_ricarica(i,3,2)+ ora_dell_ore_di_ricarica_3_2(i,1) <= 24)
-                    %scarica la batteria
-                    a2 = ora_dell_ore_di_ricarica_3_2(i,1);
-                end
-            end
-             hour_max_battery_3_2 = timeofday(datetime(string(datestr(a2/24,'HH:MM')) ,'InputFormat','HH:mm'));
-        end
-        
-         %Ottobre Caso Peggiore
-        function hour_max_battery_3_3 = getHourMaxBattery3_3(obj,Ebat_k,enel_average_power,hours)
-            for i=1:1:length(Ebat_k)
-                for j=1:1:4
-                    for k=1:1:3
-                        ore_di_ricarica(i,j,k) = (obj.capacity - Ebat_k(i,j,k))/enel_average_power;
-                    end
-                end
-            end
-            ora_dell_ore_di_ricarica_3_3 = [hours,ore_di_ricarica(:,1,3)];
-            for i=1:1:length(Ebat_k)
-                if(ore_di_ricarica(i,3,3)+ ora_dell_ore_di_ricarica_3_3(i,1) >= 23.98 & ore_di_ricarica(i,3,3)+ ora_dell_ore_di_ricarica_3_3(i,1) <= 24)
-                    %scarica la batteria
-                    a3 = ora_dell_ore_di_ricarica_3_3(i,1);
-                end
-            end
-             hour_max_battery_3_3 = timeofday(datetime(string(datestr(a3/24,'HH:MM')) ,'InputFormat','HH:mm'));
-        end
-        
-        %Dicembre Soleggiato
-        function hour_max_battery_4_1 = getHourMaxBattery4_1(obj,Ebat_k,enel_average_power,hours)
-            for i=1:1:length(Ebat_k)
-                for j=1:1:4
-                    for k=1:1:3
-                        ore_di_ricarica(i,j,k) = (obj.capacity - Ebat_k(i,j,k))/enel_average_power;
-                    end
-                end
-            end
-            ora_dell_ore_di_ricarica_4_1 = [hours,ore_di_ricarica(:,4,1)];
-            for i=1:1:length(Ebat_k)
-                if(ore_di_ricarica(i,4,1)+ ora_dell_ore_di_ricarica_4_1(i,1) >= 23.98 & ore_di_ricarica(i,4,1)+ ora_dell_ore_di_ricarica_4_1(i,1) <= 24)
-                    %scarica la batteria
-                    a1 = ora_dell_ore_di_ricarica_4_1(i,1);
-                end
-            end
-             hour_max_battery_4_1 = timeofday(datetime(string(datestr(a1/24,'HH:MM')) ,'InputFormat','HH:mm'));
-        end
-        
-        %Dicembre Nuvoloso
-        function hour_max_battery_4_2 = getHourMaxBattery4_2(obj,Ebat_k,enel_average_power,hours)
-            for i=1:1:length(Ebat_k)
-                for j=1:1:4
-                    for k=1:1:3
-                        ore_di_ricarica(i,j,k) = (obj.capacity - Ebat_k(i,j,k))/enel_average_power;
-                    end
-                end
-            end
-            ora_dell_ore_di_ricarica_4_2 = [hours,ore_di_ricarica(:,4,2)];
-            for i=1:1:length(Ebat_k)
-                if(ore_di_ricarica(i,4,2)+ ora_dell_ore_di_ricarica_4_2(i,1) >= 23.98 & ore_di_ricarica(i,4,2)+ ora_dell_ore_di_ricarica_4_2(i,1) <= 24)
-                    %scarica la batteria
-                    a2 = ora_dell_ore_di_ricarica_4_2(i,1);
-                end
-            end
-             hour_max_battery_4_2 = timeofday(datetime(string(datestr(a2/24,'HH:MM')) ,'InputFormat','HH:mm'));
-        end
-        
-         %Dicembre Caso Peggiore
-        function hour_max_battery_4_3 = getHourMaxBattery4_3(obj,Ebat_k,enel_average_power,hours)
-            for i=1:1:length(Ebat_k)
-                for j=1:1:4
-                    for k=1:1:3
-                        ore_di_ricarica(i,j,k) = (obj.capacity - Ebat_k(i,j,k))/enel_average_power;
-                    end
-                end
-            end
-            ora_dell_ore_di_ricarica_4_3 = [hours,ore_di_ricarica(:,4,3)];
-            for i=1:1:length(Ebat_k)
-                if(ore_di_ricarica(i,4,3)+ ora_dell_ore_di_ricarica_4_3(i,1) >= 23.98 & ore_di_ricarica(i,4,3)+ ora_dell_ore_di_ricarica_4_3(i,1) <= 24)
-                    %scarica la batteria
-                    a3 = ora_dell_ore_di_ricarica_4_3(i,1);
-                end
-            end
-             hour_max_battery_4_3 = timeofday(datetime(string(datestr(a3/24,'HH:MM')) ,'InputFormat','HH:mm'));
-        end
-
-        
-
     end
 end
