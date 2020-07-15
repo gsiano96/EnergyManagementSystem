@@ -524,6 +524,7 @@ title("Guadagno derivato dalla vendita dell'energia Dicembre")
 %% Grafici (12) -> (Perdita) Prezzo da pagare all'Enel per il sostentamento Aprile
 
 figure(12)
+
 % Aprile
 titles={'soleggiato','parz. nuvoloso','nuvoloso'};
 subplot(2,2,1)
@@ -550,6 +551,8 @@ legend(titles)
 title("Costo aquisto energia da terzi per il sostentamento Dicembre") 
 
 figure(17)
+
+titles=["Aprile","Agosto","Ottobre","Dicembre"];
 
 for month=1:1:4
     subplot(2,2,month)
