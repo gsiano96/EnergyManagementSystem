@@ -26,23 +26,25 @@ classdef EletricityGrid
             perdita = Egrid(1440) * price_min/1000
         end
         
-        function Pgrid=getPowerDC_k(obj,Ebatt_k,capacitaMinima,capacitaMassima,Presiduo_k)
-            Pgrid=zeros(1,1440);
-            keepalive=false;
+        function Pgrid_k=getPowerDC_k(obj,Ebatt_k,capacitaMinima,capacitaMassima,Presiduo_k)
+            Pgrid_k=zeros(1440,1);
             
-            for time=1:1:length(Presiduo_k)
-                if(keepalive)
-                    Pgrid(time)=Presiduo_k(time);
-                    %display(time);
-                end
-                if (Presiduo_k(time) <= 0 && Ebatt_k(time) <= capacitaMinima)
-                    Pgrid(time)=Presiduo_k(time);
-                elseif (Presiduo_k(time) <= 0 && Ebatt_k(time) >= capacitaMassima)
-                    Pgrid(time)=Presiduo_k(time);
-                    keepalive=true;
-                end
+            index=1440;
+            while(Ebatt_k(index) < capacitaMassima)
+                Pgrid_k(index)=Presiduo_k(index);
+                index=index-1;
             end
             
+            index=1;
+            while(Ebatt_k(index) > capacitaMinima)
+                index=index+1;
+                %display(index)
+            end
+            while(Ebatt_k(index) <= capacitaMinima)
+                Pgrid_k(index)=Presiduo_k(index);
+                %display(index);
+                index=index+1;
+            end
         end
         
         %(Ebat_carica(i,month,caso)-fullCapacity)/1000
