@@ -13,13 +13,17 @@ classdef EletricityGrid
             obj.maxCurrent=maxCurrent;
         end
         
-        function Pgrid=getPowerAC_k(obj,Ebatt_k,capacitaMinima,Presiduo_k)
-            Pgrid=zeros(1,1440);
-            for time=1:1:length(Presiduo_k)
-                if (Presiduo_k(time) <= 0 && Ebatt_k(time) <= capacitaMinima)
-                    Pgrid(time)=Presiduo_k(time);
+        function perdita=getPowerAC_k(obj,hours,Presiduo_k,x,y,price_min,ore_prezzo)
+            potenzeDallOraeEsatta=zeros(1440,1);
+            potenzaResiduaPerOre = [hours,Presiduo_k(:,x,y)/1000];
+            for i=1:1:length(Presiduo_k)
+                if(potenzaResiduaPerOre(i,1) >= ore_prezzo(x,y))
+                    potenzeDallOraeEsatta(i) = potenzaResiduaPerOre(i,2);
                 end
             end
+            
+            Egrid=cumtrapz(0.0167,abs(potenzeDallOraeEsatta));
+            perdita = Egrid(1440) * price_min/1000
         end
         
         function Pgrid=getPowerDC_k(obj,Ebatt_k,capacitaMinima,capacitaMassima,Presiduo_k)
@@ -29,7 +33,7 @@ classdef EletricityGrid
             for time=1:1:length(Presiduo_k)
                 if(keepalive)
                     Pgrid(time)=Presiduo_k(time);
-                    display(time);
+                    %display(time);
                 end
                 if (Presiduo_k(time) <= 0 && Ebatt_k(time) <= capacitaMinima)
                     Pgrid(time)=Presiduo_k(time);
