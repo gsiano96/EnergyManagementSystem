@@ -69,6 +69,26 @@ end
 %% - Interpolazione fino a 1440 punti valore -
 T_k = interp1(time_hours,T_k,time_minutes,'spline');
 
+%{
+figure(8)
+
+titles=["Irradianze giornaliere nel mese di Aprile per 24 ore",...
+    "Irradianze giornaliere nel mese di Agosto per 24 ore",...
+    "Irradianze giornaliere nel mese di Ottobre per 24 ore",...
+    "Irradianze giornaliere nel mese di Dicembre per 24 ore"];
+
+for month=1:1:4
+    subplot(2,2,month)
+    for caso=1:1:3
+        plot(time_minutes,G_k(:,month,caso))
+        hold on
+    end
+    title(titles(month))
+    legend('soleggiato','parz. nuvoloso','nuvoloso')
+    xlabel 'tempo'
+    ylabel 'Irradianza'
+end
+%}
 %% - Campo fotovoltaico -
 Pnom = 327; %[W]
 Vpanel_mpp = 54.7;
@@ -91,6 +111,12 @@ Eload_k = cumtrapz(0.0167,Pload_k);
 
 %Eload_med = Eload_k(1440)/24;
 
+figure(1)
+   plot(time_minutes,vector(:,2))
+   xlabel('Ore del giorno')
+   ylabel('Potenza (kW)')
+   title('Profilo di potenza del carico')
+   
 %% - Inverter Fotovoltaico Solarmax da 66kw DC -
 Prel_k=SolarmaxInverter.relativePower/100;
 efficiency_k=SolarmaxInverter.efficiency/100;
