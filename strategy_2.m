@@ -6,7 +6,7 @@ set(0,'defaultfigurecolor','w');
 
 %% - Caricamento dati -
 load Matfile/energy_hourly_cost.mat
-costi=costi/1000; %�/Kwh
+costi=costi/1000; %�/Kwh
 load Matfile/daily_minute.mat
 
 load Irradianze_medie_giornaliere_per_mesi/Matfile/Irradianza_Agosto.mat
@@ -249,12 +249,12 @@ dicembre_bar = [hour_max_battery_4_1,hour_max_battery_4_2,hour_max_battery_4_3];
 price_min = (costi(20)+costi(21)+costi(22)+costi(23)+costi(24))/5;
 
 
-%% Evoluzione energia del sistema
+%% - Evoluzione energia del sistema - 
 E_sist_res=(Epv_out_k-Eload_k-capacity);
 
 Ebat_carica=cumtrapz(0.0167,Pbat_carica);
 
-%Guadagno vendita energia
+%% Guadagno vendita energia
 guadagno=zeros(1440,4,3);
 for month=1:1:4
     for caso=1:1:3
@@ -274,8 +274,8 @@ for month=1:1:4
     end
 end
 
-%Costo prelievo dalla rete
 
+%% Costo prelievo dalla rete (Perdite)
 Egrid=cumtrapz(0.0167,Pgrid);
 costi=interp1(time_hours,costi,time_minutes,'spline');
 
@@ -454,23 +454,21 @@ for month=1:1:4
 end
 
 
-%% Grafici (9) ->  Evoluzione energetica in AC del fotovoltaico
-figure(9)
+%% Grafici (9) -> Potenza in ingresso alla batteria 
+titles=["Aprile","Agosto","Ottobre","Dicembre"];
 
-titles=["Energia fotovoltaico ad Aprile","Energia fotovoltaico ad Agosto",...
-    "Energia fotovoltaico ad Ottobre","Energia fotovoltaico a Dicembre"];
+figure(9)
 
 for month=1:1:4
     subplot(2,2,month)
     for caso=1:1:3
-        plot(time_minutes,Epv_out_k(:,month,caso)/1000)
+        plot(time_minutes,Pbat_carica(:,month,caso)/1000)
         hold on
     end
-    legend('soleggiato', 'parz. nuvoloso', 'nuvoloso')
-    yline((capacity+Eload_k(1440))/1000,'-r','Energia totale assorbita='+string((capacity+Eload_k(1440))/1000)+'kW');
+    legend('soleggiato','parz. nuvoloso','nuvoloso');
     title(titles(month))
-    xlabel 'tempo'
-    ylabel 'Energia [kWh]'
+    xlabel("time")
+    ylabel("Pcarica(k)");
 end
 
 %% Grafici (13) ->  Costi d'acquisto Energia 
@@ -480,84 +478,76 @@ xlabel('Ore del giorno')
 ylabel('Costo (/kWh)')
 title('Profilo di costo energia')
 
+for month=1:1:4
+    subplot(2,2,month)
+    for caso=1:1:3
+        plot(time_minutes,Ebat_carica(:,month,caso)/1000)
+        hold on
+    end
+    legend('soleggiato','parz. nuvoloso','nuvoloso');
+    title(titles(month))
+    xlabel("time")
+    ylabel("Ecarica(k)");
+    yline(fullCapacity/1000,'-r','Capacità Batteria = ' + string(fullCapacity/1000) + 'kWh');
+end
 
-%% Grafici (14) ->  Prezzo mensile di sostentamento da rete Enel 
-%{
-figure(14)
+%% Grafici (11) -> Guadagno derivato dalla vendita dell'energia ad Enel
 
+figure(11)
 % Aprile
-labels = {'soleggiato','parz. nuvoloso','nuvoloso'};
+titles={'soleggiato','parz. nuvoloso','nuvoloso'};
 subplot(2,2,1)
-s1 = price_min * abs((E_sist_res(1440,1,:))*1.0e-06);
-pie(s1,{string(s1(1))+ '',string(s1(2))+ '',string(s1(3))+ ''});
-legend(labels)
-title("Prezzo di sostentamento da rete Enel Aprile") 
+pie(guadagno(1440,1,:),{string(guadagno(1440,1,1))+ '',string(guadagno(1440,1,2))+ '',string(guadagno(1440,1,3))+ ''});
+legend(titles)
+title("Guadagno derivato dalla vendita dell'energia Aprile") 
 
 % Agosto
 subplot(2,2,2)
-s2 = price_min * abs((E_sist_res(1440,2,:))*1.0e-06);
-pie(s2,{string(s2(1))+ '',string(s2(2))+ '',string(s2(3))+ ''});
-legend(labels)
-title("Prezzo di sostentamento da rete Enel Agosto") 
+pie(guadagno(1440,2,:),{string(guadagno(1440,2,1))+ '',string(guadagno(1440,2,2))+ '',string(guadagno(1440,2,3))+ ''});
+legend(titles)
+title("Guadagno derivato dalla vendita dell'energia Agosto") 
 
 % Ottobre
 subplot(2,2,3)
-s3 = price_min * abs((E_sist_res(1440,3,:))*1.0e-06);
-pie(s3,{string(s3(1))+ '',string(s3(2))+ '',string(s3(3))+ ''});
-legend(labels)
-title("Prezzo di sostentamento da rete Enel Ottobre") 
+pie(guadagno(1440,3,:),{string(guadagno(1440,3,1))+ '',string(guadagno(1440,3,2))+ '',string(guadagno(1440,3,3))+ ''});
+legend(titles)
+title("Guadagno derivato dalla vendita dell'energia Ottobre") 
 
 % Dicembre
 subplot(2,2,4)
-s4 = price_min * abs((E_sist_res(1440,4,:))*1.0e-06);
-pie(s4,{string(s4(1))+ '',string(s4(2))+ '',string(s4(3))+ ''});
-legend(labels)
-title("Prezzo di sostentamento da rete Enel Dicembre")
-%}
+pie(guadagno(1440,4,:),{string(guadagno(1440,4,1))+ '',string(guadagno(1440,4,2))+ '',string(guadagno(1440,4,3))+ ''});
+legend(titles)
+title("Guadagno derivato dalla vendita dell'energia Dicembre") 
 
-%% Grafici (16) ->  Prezzo mensile di sostentamento da rete Enel 
-%{
-figure(16)
 
+
+%% Grafici (12) -> (Perdita) Prezzo da pagare all'Enel per il sostentamento Aprile
+
+figure(12)
 % Aprile
-labels = {'soleggiato','parz. nuvoloso','nuvoloso'};
+titles={'soleggiato','parz. nuvoloso','nuvoloso'};
 subplot(2,2,1)
-t1(1)=s1(1)+p1(1);
-t1(2)=s1(2)+p1(2);
-t1(3)=s1(3)+p1(3);
-pie(t1,{string(t1(1))+ '',string(t1(2))+ '',string(t1(3))+ ''});
-legend(labels)
-title("Prezzo totale acquisto da rete Enel Aprile") 
+pie(perdita(1440,1,:),{string(perdita(1440,1,1))+ '',string(perdita(1440,1,2))+ '',string(perdita(1440,1,3))+ ''});
+legend(titles)
+title("Costo aquisto energia da terzi per il sostentamento Aprile") 
 
 % Agosto
 subplot(2,2,2)
-t2(1)=s2(1)+p2(1);
-t2(2)=s2(2)+p2(2);
-t2(3)=s2(3)+p2(3);
-pie(t2,{string(t2(1))+ '',string(t2(2))+ '',string(t2(3))+ ''});
-legend(labels)
-title("Prezzo totale acquisto da rete Enel Agosto") 
+pie(perdita(1440,3,:),{string(perdita(1440,3,1))+ '',string(perdita(1440,3,2))+ '',string(perdita(1440,3,3))+ ''});
+legend(titles)
+title("Costo aquisto energia da terzi per il sostentamento Agosto") 
 
-% Ottobre
+% Aprile
 subplot(2,2,3)
-t3(1)=s3(1)+p3(1);
-t3(2)=s3(2)+p3(2);
-t3(3)=s3(3)+p3(3);
-pie(t3,{string(t3(1))+ '',string(t3(2))+ '',string(t3(3))+ ''});
-legend(labels)
-title("Prezzo totale acquisto da rete Enel Ottobre") 
+pie(perdita(1440,3,:),{string(perdita(1440,3,1))+ '',string(perdita(1440,3,2))+ '',string(perdita(1440,3,3))+ ''});
+legend(titles)
+title("Costo aquisto energia da terzi per il sostentamento Ottobre") 
 
 % Dicembre
 subplot(2,2,4)
-t4(1)=s4(1)+p4(1);
-t4(2)=s4(2)+p4(2);
-t4(3)=s4(3)+p4(3);
-pie(t4,{string(t4(1))+ '',string(t4(2))+ '',string(t4(3))+ ''});
-legend(labels)
-title("Prezzo totale acquisto da rete Enel Dicembre") 
-%}
-%% Grafici
-titles=["Aprile","Agosto","Ottobre","Dicembre"];
+pie(perdita(1440,4,:),{string(perdita(1440,4,1))+ '',string(perdita(1440,4,2))+ '',string(perdita(1440,4,3))+ ''});
+legend(titles)
+title("Costo aquisto energia da terzi per il sostentamento Dicembre") 
 
 figure(17)
 
@@ -585,7 +575,7 @@ for month=1:1:4
     title(titles(month))
     xlabel("time")
     ylabel("Ecarica(k)");
-    yline(fullCapacity/1000,'-r','Capacit� Batteria = ' + string(fullCapacity/1000) + 'kWh');
+    yline(fullCapacity/1000,'-r','Capacit� Batteria = ' + string(fullCapacity/1000) + 'kWh');
 end
 
 %% Grafici 
@@ -597,7 +587,7 @@ mesi=["Aprile","Agosto","Ottobre","Dicembre"];
 
 for month=1:1:4
     subplot(2,2,month)
-    pie([guadagno(1440,month,1) guadagno(1440,month,2) guadagno(1440,month,3)],{string(guadagno(1440,month,1))+" � a "+titles(1), string(guadagno(1440,month,2))+" � a "+titles(2), string(guadagno(1440,month,3))+" � a "+titles(3)})
+    pie([guadagno(1440,month,1) guadagno(1440,month,2) guadagno(1440,month,3)],{string(guadagno(1440,month,1))+" � a "+titles(1), string(guadagno(1440,month,2))+" � a "+titles(2), string(guadagno(1440,month,3))+" � a "+titles(3)})
     title("Utile vendita energia alla rete "+mesi(month));
 end
 
@@ -605,7 +595,7 @@ figure(20)
 titles={'soleggiato','parz. nuvoloso','nuvoloso'};
 for month=1:1:4
     subplot(2,2,month)
-    pie([perdita(1440,month,1) perdita(1440,month,2) perdita(1440,month,3)],{string(-perdita(1440,month,1))+" � a "+titles(1), string(-perdita(1440,month,2))+" � a "+titles(2), string(-perdita(1440,month,3))+" � a "+titles(3)})
+    pie([perdita(1440,month,1) perdita(1440,month,2) perdita(1440,month,3)],{string(-perdita(1440,month,1))+" � a "+titles(1), string(-perdita(1440,month,2))+" � a "+titles(2), string(-perdita(1440,month,3))+" � a "+titles(3)})
     title("Perdita di consumo dalla rete elettrica "+mesi(month));
 end
 
@@ -615,8 +605,8 @@ titles={'soleggiato','parz. nuvoloso','nuvoloso'};
 for month=1:1:4
     subplot(2,2,month)
     pie([guadagno(1440,month,1)-perdita(1440,month,1) guadagno(1440,month,2)-perdita(1440,month,2) guadagno(1440,month,3)-perdita(1440,month,3)],...
-        {string(guadagno(1440,month,1)-perdita(1440,month,1))+" � a "+titles(1),...
-        string(guadagno(1440,month,2)-perdita(1440,month,2))+" � a "+titles(2),...
-        string(guadagno(1440,month,3)-perdita(1440,month,3))+" � a "+titles(3)})
+        {string(guadagno(1440,month,1)-perdita(1440,month,1))+" � a "+titles(1),...
+        string(guadagno(1440,month,2)-perdita(1440,month,2))+" � a "+titles(2),...
+        string(guadagno(1440,month,3)-perdita(1440,month,3))+" � a "+titles(3)})
     title('Guadagno giornaliero '+mesi(month));
 end
