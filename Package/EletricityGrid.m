@@ -33,17 +33,6 @@ classdef EletricityGrid
             while(Ebatt_k(index) < capacitaMassima)
                 Pgrid_k(index)=Presiduo_k(index);
                 index=index-1;
-            for time=1:1:length(Presiduo_k)
-                if(keepalive)
-                    Pgrid(time)=Presiduo_k(time);
-                    %display(time);
-                end
-                if (Presiduo_k(time) <= 0 && Ebatt_k(time) <= capacitaMinima)
-                    Pgrid(time)=Presiduo_k(time);
-                elseif (Presiduo_k(time) <= 0 && Ebatt_k(time) >= capacitaMassima)
-                    Pgrid(time)=Presiduo_k(time);
-                    keepalive=true;
-                end
             end
             
             index=1;
