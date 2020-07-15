@@ -112,11 +112,11 @@ Eload_k = cumtrapz(0.0167,Pload_k);
 
 %Eload_med = Eload_k(1440)/24;
 
-figure(1)
-   plot(time_minutes,vector(:,2))
-   xlabel('Ore del giorno')
-   ylabel('Potenza (kW)')
-   title('Profilo di potenza del carico')
+% figure(1)
+%    plot(time_minutes,vector(:,2))
+%    xlabel('Ore del giorno')
+%    ylabel('Potenza (kW)')
+%    title('Profilo di potenza del carico')
    
 %% - Inverter Fotovoltaico Solarmax da 66kw DC -
 Prel_k=SolarmaxInverter.relativePower/100;
@@ -497,12 +497,16 @@ for month=1:1:4
     ylabel("Pcarica(k)");
 end
 
-%% Grafici (13) ->  Costi d'acquisto Energia 
-figure(13)
+%% Grafici (10) ->  Costi d'acquisto Energia 
+figure(10)
 plot(time_minutes, costi)
 xlabel('Ore del giorno')
 ylabel('Costo (/kWh)')
 title('Profilo di costo energia')
+
+%% Grafici (11) ->  Ebat
+
+figure(11)
 
 for month=1:1:4
     subplot(2,2,month)
@@ -517,39 +521,41 @@ for month=1:1:4
     yline(fullCapacity/1000,'-r','Capacità Batteria = ' + string(fullCapacity/1000) + 'kWh');
 end
 
-%% Grafici (11) -> Guadagno derivato dalla vendita dell'energia ad Enel
 
-figure(11)
+
+%% Grafici (12) -> Utile derivato dalla vendita dell'energia ad Enel
+
+figure(12)
 % Aprile
 titles={'soleggiato','parz. nuvoloso','nuvoloso'};
 subplot(2,2,1)
 pie(guadagno(1440,1,:),{string(guadagno(1440,1,1))+ '',string(guadagno(1440,1,2))+ '',string(guadagno(1440,1,3))+ ''});
 legend(titles)
-title("Guadagno derivato dalla vendita dell'energia Aprile") 
+title("Utile vendita energia alla rete Aprile") 
 
 % Agosto
 subplot(2,2,2)
 pie(guadagno(1440,2,:),{string(guadagno(1440,2,1))+ '',string(guadagno(1440,2,2))+ '',string(guadagno(1440,2,3))+ ''});
 legend(titles)
-title("Guadagno derivato dalla vendita dell'energia Agosto") 
+title("Utile vendita energia alla rete Agosto") 
 
 % Ottobre
 subplot(2,2,3)
 pie(guadagno(1440,3,:),{string(guadagno(1440,3,1))+ '',string(guadagno(1440,3,2))+ '',string(guadagno(1440,3,3))+ ''});
 legend(titles)
-title("Guadagno derivato dalla vendita dell'energia Ottobre") 
+title("Utile vendita energia alla rete Ottobre") 
 
 % Dicembre
 subplot(2,2,4)
 pie(guadagno(1440,4,:),{string(guadagno(1440,4,1))+ '',string(guadagno(1440,4,2))+ '',string(guadagno(1440,4,3))+ ''});
 legend(titles)
-title("Guadagno derivato dalla vendita dell'energia Dicembre") 
+title("Utile vendita energia alla rete Dicembre") 
 
 
 
-%% Grafici (12) -> (Perdita) Prezzo da pagare all'Enel per il sostentamento Aprile
+%% Grafici (13) -> (Perdita) Prezzo da pagare all'Enel per il sostentamento Aprile
 
-figure(12)
+figure(13)
 
 % Aprile
 titles={'soleggiato','parz. nuvoloso','nuvoloso'};
@@ -560,7 +566,7 @@ title("Costo aquisto energia da terzi per il sostentamento Aprile")
 
 % Agosto
 subplot(2,2,2)
-pie(perdita(1440,3,:),{string(perdita(1440,3,1))+ '',string(perdita(1440,3,2))+ '',string(perdita(1440,3,3))+ ''});
+pie(perdita(1440,2,:),{string(perdita(1440,2,1))+ '',string(perdita(1440,2,2))+ '',string(perdita(1440,2,3))+ ''});
 legend(titles)
 title("Costo aquisto energia da terzi per il sostentamento Agosto") 
 
@@ -576,66 +582,35 @@ pie(perdita(1440,4,:),{string(perdita(1440,4,1))+ '',string(perdita(1440,4,2))
 legend(titles)
 title("Costo aquisto energia da terzi per il sostentamento Dicembre") 
 
-figure(17)
-
-titles=["Aprile","Agosto","Ottobre","Dicembre"];
-
-for month=1:1:4
-    subplot(2,2,month)
-    for caso=1:1:3
-        plot(time_minutes,Pbat_carica(:,month,caso)/1000)
-        hold on
-    end
-    legend('soleggiato','parz. nuvoloso','nuvoloso');
-    title(titles(month))
-    xlabel("time")
-    ylabel("Pcarica(k)");
-end
-
-figure(18)
-
-for month=1:1:4
-    subplot(2,2,month)
-    for caso=1:1:3
-        plot(time_minutes,Ebat_carica(:,month,caso)/1000)
-        hold on
-    end
-    legend('soleggiato','parz. nuvoloso','nuvoloso');
-    title(titles(month))
-    xlabel("time")
-    ylabel("Ecarica(k)");
-    yline(fullCapacity/1000,'-r','Capacit� Batteria = ' + string(fullCapacity/1000) + 'kWh');
-end
-
-%% Grafici 
-
-figure(19)
-
-titles={'soleggiato','parz. nuvoloso','nuvoloso'};
-mesi=["Aprile","Agosto","Ottobre","Dicembre"];
-
-for month=1:1:4
-    subplot(2,2,month)
-    pie([guadagno(1440,month,1) guadagno(1440,month,2) guadagno(1440,month,3)],{string(guadagno(1440,month,1))+" � a "+titles(1), string(guadagno(1440,month,2))+" � a "+titles(2), string(guadagno(1440,month,3))+" � a "+titles(3)})
-    title("Utile vendita energia alla rete "+mesi(month));
-end
-
-figure(20)
-titles={'soleggiato','parz. nuvoloso','nuvoloso'};
-for month=1:1:4
-    subplot(2,2,month)
-    pie([perdita(1440,month,1) perdita(1440,month,2) perdita(1440,month,3)],{string(-perdita(1440,month,1))+" � a "+titles(1), string(-perdita(1440,month,2))+" � a "+titles(2), string(-perdita(1440,month,3))+" � a "+titles(3)})
-    title("Perdita di consumo dalla rete elettrica "+mesi(month));
-end
 
 
-figure(21)
-titles={'soleggiato','parz. nuvoloso','nuvoloso'};
-for month=1:1:4
-    subplot(2,2,month)
-    pie([guadagno(1440,month,1)-perdita(1440,month,1) guadagno(1440,month,2)-perdita(1440,month,2) guadagno(1440,month,3)-perdita(1440,month,3)],...
-        {string(guadagno(1440,month,1)-perdita(1440,month,1))+" � a "+titles(1),...
-        string(guadagno(1440,month,2)-perdita(1440,month,2))+" � a "+titles(2),...
-        string(guadagno(1440,month,3)-perdita(1440,month,3))+" � a "+titles(3)})
-    title('Guadagno giornaliero '+mesi(month));
-end
+%% Grafici (14) Guadagno = utile - perdita
+
+figure(14)
+
+% Aprile
+g1(1)=guadagno(1440,1,1)-perdita(1440,1,1);
+g1(2)=guadagno(1440,1,2)-perdita(1440,1,2);
+g1(3)=guadagno(1440,1,3)-perdita(1440,1,3);
+
+% Agosto
+g2(1)=guadagno(1440,2,1)-perdita(1440,2,1);
+g2(2)=guadagno(1440,2,2)-perdita(1440,2,2);
+g2(3)=guadagno(1440,2,3)-perdita(1440,2,3);
+
+% Ottobre
+g3(1)=guadagno(1440,3,1)-perdita(1440,3,1);
+g3(2)=guadagno(1440,3,2)-perdita(1440,3,2);
+g3(3)=guadagno(1440,3,3)-perdita(1440,3,3);
+
+% Dicembre
+g4(1)=guadagno(1440,4,1)-perdita(1440,4,1);
+g4(2)=guadagno(1440,4,2)-perdita(1440,4,2);
+g4(3)=guadagno(1440,4,3)-perdita(1440,4,3);
+
+
+X = categorical({'Aprile','Agosto','Ottobre','Dicembre'});
+gtot=[g1;g2;g3;g4];
+bar(X,gtot)
+legend({'Soleggiato', 'parz. nuvoloso', 'Nuvoloso'});
+title('Guadagno giornaliero ');
