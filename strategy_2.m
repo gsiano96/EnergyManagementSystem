@@ -466,7 +466,7 @@ for month=1:1:4
     ylabel("Pcarica(k)");
 end
 
-%% Grafici (9) -> Energia in ingresso alla batteria 
+%% Grafici (10) -> Energia in ingresso alla batteria 
 figure(10)
 
 for month=1:1:4
@@ -482,7 +482,7 @@ for month=1:1:4
     yline(fullCapacity/1000,'-r','Capacità Batteria = ' + string(fullCapacity/1000) + 'kWh');
 end
 
-%% Grafici (9) -> Guadagno derivato dalla vendita dell'energia ad Enel
+%% Grafici (11) -> Guadagno derivato dalla vendita dell'energia ad Enel
 
 figure(11)
 % Aprile
@@ -512,7 +512,7 @@ title("Guadagno derivato dalla vendita dell'energia Dicembre")
 
 
 
-%% Grafici (9) -> (Perdita) Prezzo da pagare all'Enel per il sostentamento Aprile
+%% Grafici (12) -> (Perdita) Prezzo da pagare all'Enel per il sostentamento Aprile
 
 figure(12)
 % Aprile

@@ -17,7 +17,7 @@ classdef ACBattery
             obj.InverterBatEff=InverterBatEff;
         end
         
-        function [E, Evendibile_k]=batteryEnergy_k(obj,Presidual_k)
+        function E=batteryEnergy_k(obj,Presidual_k)
             discharge_percentage=1-obj.dod;
             minimum_capacity=discharge_percentage*obj.capacity;
             Ebat_k=zeros(1440,4,3);
@@ -31,7 +31,6 @@ classdef ACBattery
                          
                         %Cutoff control for charging phase
                         if( Ebat_k(i,j,k)> obj.capacity)
-                            Evendibile_k(i,j,k) = Ebat_k(i,j,k);
                             Ebat_k(i,j,k) = obj.fullCapacity;
                         end
                         
@@ -43,8 +42,7 @@ classdef ACBattery
                 end
             end
              
-            E=Ebat_k;
-            Evendibile_k = Evendibile_k;         
+            E=Ebat_k;     
         end
         
         function time_charging=getTimeToReload(obj,enel_average_power,Ebat_k)
@@ -85,6 +83,19 @@ classdef ACBattery
                 end
             end
             P_bat=Presidual_k;
+        end
+        
+        
+        function [Pbat_carica,Pbat_scarica] = decouplePowerBattery(obj,Pbat)
+            for i=1:1:length(Pbat)
+                if Pbat(i) >= 0
+                    Pbat_carica(i) = Pbat(i);
+                    Pbat_scarica(i) = 0;
+                else
+                    Pbat_carica(i) = 0;
+                    Pbat_scarica(i) = - Pbat(i);
+                end
+            end
         end
         
         

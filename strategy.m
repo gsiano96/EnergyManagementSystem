@@ -200,8 +200,16 @@ rendimentoInverterBatteria = 0.95;
 Battery = ACBattery(fullCapacity, dod, P_inv_bat_k, Befficiency,rendimentoInverterBatteria);
 
 P_bat = filterPower(Battery,Presiduo_k);
-[Ebat_k, Evendibile_k] = batteryEnergy_k(Battery,P_bat);
+Ebat_k = batteryEnergy_k(Battery,P_bat);
 % figure(), plot(time_minutes,Ebat_k(:,2,1)/1000);
+
+%Disaccoppiamento Potenza ingresso/uscita batteria 
+for j=1:1:4
+    for k=1:1:3
+        [Pbat_carica(:,j,k),Pbat_scarica(:,j,k)] = decouplePowerBattery(Battery,P_bat(:,j,k));
+    end
+end
+
 
 %Potenza in uscita dall'inverter
 Prel_bat=abs(P_bat)/Pindcmax;
@@ -229,6 +237,8 @@ charging_time = getTimeToReload(Battery,enel_average_power,Ebat_k);
 % ore fino a che possiamo scaricare la batteria per avere ad inizio-fine 
 % giornata la stessa energia in batteria (in questo caso la capacita
 % massima)
+
+grid=EletricityGrid(3,900,1);
 
 %Aprile
 hour_max_battery_1_1 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,1,1);
@@ -261,11 +271,36 @@ price_min = (costi(20)+costi(21)+costi(22)+costi(23)+costi(24))/5;
 %% - Evoluzione energia del sistema - 
 E_sist_res=(Epv_out_k-Eload_k-capacity);
 
-%% - Analisi dei Costi di Vendita  -
-% tra i 4 ed i 6 centesimi per kWh
-% costo di vendita dell'energia in eccesso data dal fotovoltaico
-price_pv = 0.05; %[Euro] 
-Evendibile_k;
+Ebat_carica=cumtrapz(0.0167,Pbat_carica);
+
+%% Guadagno vendita energia
+guadagno=zeros(1440,4,3);
+for month=1:1:4
+    for caso=1:1:3
+        guadagno(:,month,caso)=grid.putPower_k(Ebat_carica(:,month,caso)/1000, fullCapacity/1000, 0.05);
+    end
+end
+
+%Potenza da prelevare dalla rete
+Pgrid=zeros(1440,4,3);
+for month=1:1:4
+    for caso=1:1:3
+        Pgrid(:,month,caso)=grid.getPowerAC_k(Ebat_k,21,Presiduo_k);
+    end
+end
+
+
+%% Costo prelievo dalla rete (Perdite)
+Egrid=cumtrapz(0.0167,Pgrid);
+costi=interp1(time_hours,costi,time_minutes,'spline');
+
+perdita=zeros(1440,4,3);
+for month=1:1:4
+    for caso=1:1:3
+        perdita(:,month,caso)=Egrid(:,month,caso)/1000.*costi/1000;
+    end
+end
+
  
 %% Grafici (1) -> Caratteristica ingresso-uscita Potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
 
@@ -489,7 +524,7 @@ title("Orario di partenza della fase di ricarica della batteria ");
 
 %% Grafici (12) ->  Costi d'acquisto Energia 
 figure(12)
-plot(time_hours,costi/1000)
+plot(time_minutes,costi/1000)
 xlabel('Ore del giorno')
 ylabel('Costo (€/KWh)')
 title('Profilo di costo energia')
@@ -526,9 +561,61 @@ pie(p4,{string(p4(1))+ '€',string(p4(2))+ '€',string(p4(3))+ '€'});
 legend(labels)
 title("Prezzo di ricarica della batteria da rete Enel Dicembre") 
 
-%% Grafici (14) ->  Prezzo mensile di sostentamento da rete Enel 
-
+%% Grafici (14) -> Guadagno derivato dalla vendita dell'energia ad Enel
 figure(14)
+% Aprile
+titles={'soleggiato','parz. nuvoloso','nuvoloso'};
+subplot(2,2,1)
+pie(guadagno(1440,1,:),{string(guadagno(1440,1,1))+ '€',string(guadagno(1440,1,2))+ '€',string(guadagno(1440,1,3))+ '€'});
+legend(titles)
+title("Guadagno derivato dalla vendita dell'energia Aprile") 
+
+% Agosto
+subplot(2,2,2)
+pie(guadagno(1440,2,:),{string(guadagno(1440,2,1))+ '€',string(guadagno(1440,2,2))+ '€',string(guadagno(1440,2,3))+ '€'});
+legend(titles)
+title("Guadagno derivato dalla vendita dell'energia Agosto") 
+
+% Ottobre
+subplot(2,2,3)
+pie(guadagno(1440,3,:),{string(guadagno(1440,3,1))+ '€',string(guadagno(1440,3,2))+ '€',string(guadagno(1440,3,3))+ '€'});
+legend(titles)
+title("Guadagno derivato dalla vendita dell'energia Ottobre") 
+
+% Dicembre
+subplot(2,2,4)
+pie(guadagno(1440,4,:),{string(guadagno(1440,4,1))+ '€',string(guadagno(1440,4,2))+ '€',string(guadagno(1440,4,3))+ '€'});
+legend(titles)
+title("Guadagno derivato dalla vendita dell'energia Dicembre") 
+
+%% Grafici (15) ->  (Perdita) Prezzo da pagare all'Enel per il sostentamento
+figure(15)
+% Aprile
+titles={'soleggiato','parz. nuvoloso','nuvoloso'};
+subplot(2,2,1)
+pie(perdita(1440,1,:),{string(perdita(1440,1,1))+ '€',string(perdita(1440,1,2))+ '€',string(perdita(1440,1,3))+ '€'});
+legend(titles)
+title("Costo aquisto energia da terzi per il sostentamento Aprile") 
+
+% Agosto
+subplot(2,2,2)
+pie(perdita(1440,3,:),{string(perdita(1440,3,1))+ '€',string(perdita(1440,3,2))+ '€',string(perdita(1440,3,3))+ '€'});
+legend(titles)
+title("Costo aquisto energia da terzi per il sostentamento Agosto") 
+
+% Aprile
+subplot(2,2,3)
+pie(perdita(1440,3,:),{string(perdita(1440,3,1))+ '€',string(perdita(1440,3,2))+ '€',string(perdita(1440,3,3))+ '€'});
+legend(titles)
+title("Costo aquisto energia da terzi per il sostentamento Ottobre") 
+
+% Dicembre
+subplot(2,2,4)
+pie(perdita(1440,4,:),{string(perdita(1440,4,1))+ '€',string(perdita(1440,4,2))+ '€',string(perdita(1440,4,3))+ '€'});
+legend(titles)
+title("Costo aquisto energia da terzi per il sostentamento Dicembre") 
+
+%{
 % Aprile
 labels = {'Soleggiato', 'parz. nuvoloso', 'Nuvoloso'};
 subplot(2,2,1)
@@ -557,9 +644,11 @@ s4 = price_min * abs((E_sist_res(1440,4,:))*1.0e-06);
 pie(s4,{string(s4(1))+ '€',string(s4(2))+ '€',string(s4(3))+ '€'});
 legend(labels)
 title("Prezzo di sostentamento da rete Enel Dicembre") 
+%}
 
-%% Grafici (15) ->  Prezzo mensile di sostentamento da rete Enel 
+%% Grafici (15) ->  Prezzo di ricarica della batteria + (Perdita) Prezzo da pagare per il sostentamento
 
+%{
 figure(15)
 % Aprile
 labels = {'Soleggiato', 'parz. nuvoloso', 'Nuvoloso'};
@@ -597,4 +686,4 @@ t4(3)=s4(3)+p4(3);
 pie(t4,{string(t4(1))+ '€',string(t4(2))+ '€',string(t4(3))+ '€'});
 legend(labels)
 title("Prezzo totale acquisto da rete Enel Dicembre") 
-
+%}
