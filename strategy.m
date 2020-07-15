@@ -200,7 +200,7 @@ rendimentoInverterBatteria = 0.95;
 Battery = ACBattery(fullCapacity, dod, P_inv_bat_k, Befficiency,rendimentoInverterBatteria);
 
 P_bat = filterPower(Battery,Presiduo_k);
-Ebat_k = batteryEnergy_k(Battery,P_bat);
+[Ebat_k, Evendibile_k] = batteryEnergy_k(Battery,P_bat);
 % figure(), plot(time_minutes,Ebat_k(:,2,1)/1000);
 
 %Potenza in uscita dall'inverter
@@ -263,8 +263,10 @@ E_sist_res=(Epv_out_k-Eload_k-capacity);
 
 %% - Analisi dei Costi di Vendita  -
 % tra i 4 ed i 6 centesimi per kWh
-
-
+% costo di vendita dell'energia in eccesso data dal fotovoltaico
+price_pv = 0.05; %[Euro] 
+Evendibile_k;
+ 
 %% Grafici (1) -> Caratteristica ingresso-uscita Potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
 
 figure(1)
