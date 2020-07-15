@@ -6,6 +6,7 @@ set(0,'defaultfigurecolor','w');
 
 %% - Caricamento dati -
 load Matfile/energy_hourly_cost.mat
+costi=costi/1000; %€/Kwh
 load Matfile/daily_minute.mat
 
 load Irradianze_medie_giornaliere_per_mesi/Matfile/Irradianza_Agosto.mat
@@ -265,7 +266,11 @@ end
 Pgrid=zeros(1440,4,3);
 for month=1:1:4
     for caso=1:1:3
-        Pgrid(:,month,caso)=grid.getPowerDC_k(Ebat_k,7.829,78.29,Presiduo_k.*efficiency_k(:,month,caso));
+        Pgrid(:,month,caso)=abs(grid.getPowerDC_k(...
+        Ebat_k(:,month,caso),...
+        fullCapacity*0.10,...
+        fullCapacity,...
+        Presiduo_k(:,month,caso).*efficiency_k(:,month,caso)));
     end
 end
 
@@ -277,7 +282,7 @@ costi=interp1(time_hours,costi,time_minutes,'spline');
 perdita=zeros(1440,4,3);
 for month=1:1:4
     for caso=1:1:3
-        perdita(:,month,caso)=Egrid(:,month,caso)/1000.*costi/1000;
+        perdita(:,month,caso)=Egrid(:,month,caso)/1000.*costi;
     end
 end
 
@@ -470,7 +475,7 @@ end
 
 %% Grafici (13) ->  Costi d'acquisto Energia 
 figure(13)
-plot(time_minutes, costi/1000)
+plot(time_minutes, costi)
 xlabel('Ore del giorno')
 ylabel('Costo (Â€/kWh)')
 title('Profilo di costo energia')
@@ -583,20 +588,35 @@ for month=1:1:4
     yline(fullCapacity/1000,'-r','Capacità  Batteria = ' + string(fullCapacity/1000) + 'kWh');
 end
 
-%% Grafici
+%% Grafici 
 
 figure(19)
+
 titles={'soleggiato','parz. nuvoloso','nuvoloso'};
+mesi=["Aprile","Agosto","Ottobre","Dicembre"];
+
 for month=1:1:4
     subplot(2,2,month)
     pie([guadagno(1440,month,1) guadagno(1440,month,2) guadagno(1440,month,3)],{string(guadagno(1440,month,1))+" € a "+titles(1), string(guadagno(1440,month,2))+" € a "+titles(2), string(guadagno(1440,month,3))+" € a "+titles(3)})
+    title("Utile vendita energia alla rete "+mesi(month));
 end
-
-%% Grafici
 
 figure(20)
 titles={'soleggiato','parz. nuvoloso','nuvoloso'};
 for month=1:1:4
     subplot(2,2,month)
     pie([perdita(1440,month,1) perdita(1440,month,2) perdita(1440,month,3)],{string(-perdita(1440,month,1))+" € a "+titles(1), string(-perdita(1440,month,2))+" € a "+titles(2), string(-perdita(1440,month,3))+" € a "+titles(3)})
+    title("Perdita di consumo dalla rete elettrica "+mesi(month));
+end
+
+
+figure(21)
+titles={'soleggiato','parz. nuvoloso','nuvoloso'};
+for month=1:1:4
+    subplot(2,2,month)
+    pie([guadagno(1440,month,1)-perdita(1440,month,1) guadagno(1440,month,2)-perdita(1440,month,2) guadagno(1440,month,3)-perdita(1440,month,3)],...
+        {string(guadagno(1440,month,1)-perdita(1440,month,1))+" € a "+titles(1),...
+        string(guadagno(1440,month,2)-perdita(1440,month,2))+" € a "+titles(2),...
+        string(guadagno(1440,month,3)-perdita(1440,month,3))+" € a "+titles(3)})
+    title('Guadagno giornaliero '+mesi(month));
 end
