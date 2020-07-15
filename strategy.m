@@ -241,29 +241,31 @@ charging_time = getTimeToReload(Battery,enel_average_power,Ebat_k);
 grid=EletricityGrid(3,900,1);
 
 %Aprile
-hour_max_battery_1_1 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,1,1);
-hour_max_battery_1_2 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,1,2);
-hour_max_battery_1_3 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,1,3);
+[hour_max_battery_1_1,a_1_1] = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,1,1);
+[hour_max_battery_1_2,a_1_2] = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,1,2);
+[hour_max_battery_1_3,a_1_3] = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,1,3);
 aprile_bar = [hour_max_battery_1_1,hour_max_battery_1_2,hour_max_battery_1_3];
 
 %Agosto
-hour_max_battery_2_1 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,2,1);
-hour_max_battery_2_2 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,2,2);
-hour_max_battery_2_3 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,2,3);
+[hour_max_battery_2_1,a_2_1] = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,2,1);
+[hour_max_battery_2_2,a_2_2] = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,2,2);
+[hour_max_battery_2_3,a_2_3] = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,2,3);
 agosto_bar = [hour_max_battery_2_1,hour_max_battery_2_2,hour_max_battery_2_3];
 
 %Ottobre
-hour_max_battery_3_1 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,3,1);
-hour_max_battery_3_2 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,3,2);
-hour_max_battery_3_3 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,3,3);
+[hour_max_battery_3_1,a_3_1] = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,3,1);
+[hour_max_battery_3_2,a_3_2] = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,3,2);
+[hour_max_battery_3_3,a_3_3] = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,3,3);
 ottobre_bar = [hour_max_battery_3_1,hour_max_battery_3_2,hour_max_battery_3_3];
 
 %Dicembre
-hour_max_battery_4_1 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,4,1);
-hour_max_battery_4_2 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,4,2);
-hour_max_battery_4_3 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,4,3);
+[hour_max_battery_4_1,a_4_1] = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,4,1);
+[hour_max_battery_4_2,a_4_2] = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,4,2);
+[hour_max_battery_4_3,a_4_3] = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,4,3);
 dicembre_bar = [hour_max_battery_4_1,hour_max_battery_4_2,hour_max_battery_4_3];
 
+ore_prezzo = [a_1_1 a_1_2 a_1_3; a_2_1 a_2_2 a_2_3; a_3_1 a_3_2 a_3_3; a_4_1 a_4_2 a_4_3];
+mezzanotte = duration(24,00,0);
 
 % costi energia ore notturne
 price_min = (costi(20)+costi(21)+costi(22)+costi(23)+costi(24))/5;
@@ -281,27 +283,14 @@ for month=1:1:4
     end
 end
 
-%Potenza da prelevare dalla rete
-Pgrid=zeros(1440,4,3);
-for month=1:1:4
-    for caso=1:1:3
-        Pgrid(:,month,caso)=grid.getPowerAC_k(Ebat_k,21,Presiduo_k);
-    end
-end
-
-
 %% Costo prelievo dalla rete (Perdite)
-Egrid=cumtrapz(0.0167,Pgrid);
-costi=interp1(time_hours,costi,time_minutes,'spline');
 
-perdita=zeros(1440,4,3);
-for month=1:1:4
-    for caso=1:1:3
-        perdita(:,month,caso)=Egrid(:,month,caso)/1000.*costi/1000;
+for j=1:1:4
+    for k=1:1:3
+        perdita(j,k) = grid.getPowerAC_k(hours,Presiduo_k,j,k,price_min,ore_prezzo);
     end
 end
 
- 
 %% Grafici (1) -> Caratteristica ingresso-uscita Potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
 
 figure(1)
@@ -523,6 +512,7 @@ legend({'Soleggiato', 'parz. nuvoloso', 'Nuvoloso'});
 title("Orario di partenza della fase di ricarica della batteria ");
 
 %% Grafici (12) ->  Costi d'acquisto Energia 
+costi=interp1(time_hours,costi,time_minutes,'spline');
 figure(12)
 plot(time_minutes,costi/1000)
 xlabel('Ore del giorno')
@@ -561,129 +551,125 @@ pie(p4,{string(p4(1))+ '€',string(p4(2))+ '€',string(p4(3))+ '€'});
 legend(labels)
 title("Prezzo di ricarica della batteria da rete Enel Dicembre") 
 
-%% Grafici (14) -> Guadagno derivato dalla vendita dell'energia ad Enel
+%% Grafici (14) -> Utile derivato dalla vendita dell'energia ad Enel
 figure(14)
 % Aprile
 titles={'soleggiato','parz. nuvoloso','nuvoloso'};
 subplot(2,2,1)
 pie(guadagno(1440,1,:),{string(guadagno(1440,1,1))+ '€',string(guadagno(1440,1,2))+ '€',string(guadagno(1440,1,3))+ '€'});
 legend(titles)
-title("Guadagno derivato dalla vendita dell'energia Aprile") 
+title("Utile derivato dalla vendita dell'energia Aprile") 
 
 % Agosto
 subplot(2,2,2)
 pie(guadagno(1440,2,:),{string(guadagno(1440,2,1))+ '€',string(guadagno(1440,2,2))+ '€',string(guadagno(1440,2,3))+ '€'});
 legend(titles)
-title("Guadagno derivato dalla vendita dell'energia Agosto") 
+title("Utile derivato dalla vendita dell'energia Agosto") 
 
 % Ottobre
 subplot(2,2,3)
 pie(guadagno(1440,3,:),{string(guadagno(1440,3,1))+ '€',string(guadagno(1440,3,2))+ '€',string(guadagno(1440,3,3))+ '€'});
 legend(titles)
-title("Guadagno derivato dalla vendita dell'energia Ottobre") 
+title("Utile derivato dalla vendita dell'energia Ottobre") 
 
 % Dicembre
 subplot(2,2,4)
 pie(guadagno(1440,4,:),{string(guadagno(1440,4,1))+ '€',string(guadagno(1440,4,2))+ '€',string(guadagno(1440,4,3))+ '€'});
 legend(titles)
-title("Guadagno derivato dalla vendita dell'energia Dicembre") 
+title("Utile derivato dalla vendita dell'energia Dicembre") 
 
 %% Grafici (15) ->  (Perdita) Prezzo da pagare all'Enel per il sostentamento
 figure(15)
 % Aprile
 titles={'soleggiato','parz. nuvoloso','nuvoloso'};
 subplot(2,2,1)
-pie(perdita(1440,1,:),{string(perdita(1440,1,1))+ '€',string(perdita(1440,1,2))+ '€',string(perdita(1440,1,3))+ '€'});
+pie(perdita(1,:),{string(perdita(1,1))+ '€',string(perdita(1,2))+ '€',string(perdita(1,3))+ '€'});
 legend(titles)
 title("Costo aquisto energia da terzi per il sostentamento Aprile") 
 
 % Agosto
 subplot(2,2,2)
-pie(perdita(1440,3,:),{string(perdita(1440,3,1))+ '€',string(perdita(1440,3,2))+ '€',string(perdita(1440,3,3))+ '€'});
+pie(perdita(2,:),{string(perdita(2,1))+ '€',string(perdita(2,2))+ '€',string(perdita(2,3))+ '€'});
 legend(titles)
 title("Costo aquisto energia da terzi per il sostentamento Agosto") 
 
-% Aprile
+% Ottobre
 subplot(2,2,3)
-pie(perdita(1440,3,:),{string(perdita(1440,3,1))+ '€',string(perdita(1440,3,2))+ '€',string(perdita(1440,3,3))+ '€'});
+pie(perdita(3,:),{string(perdita(3,1))+ '€',string(perdita(3,2))+ '€',string(perdita(3,3))+ '€'});
 legend(titles)
 title("Costo aquisto energia da terzi per il sostentamento Ottobre") 
 
 % Dicembre
 subplot(2,2,4)
-pie(perdita(1440,4,:),{string(perdita(1440,4,1))+ '€',string(perdita(1440,4,2))+ '€',string(perdita(1440,4,3))+ '€'});
+pie(perdita(4,:),{string(perdita(4,1))+ '€',string(perdita(4,2))+ '€',string(perdita(4,3))+ '€'});
 legend(titles)
 title("Costo aquisto energia da terzi per il sostentamento Dicembre") 
 
-%{
+%% Grafici (16) ->  Prezzo di ricarica della batteria + (Perdita) Prezzo da pagare per il sostentamento
+
+figure(16)
 % Aprile
 labels = {'Soleggiato', 'parz. nuvoloso', 'Nuvoloso'};
 subplot(2,2,1)
-s1 = price_min * abs((E_sist_res(1440,1,:))*1.0e-06);
-pie(s1,{string(s1(1))+ '€',string(s1(2))+ '€',string(s1(3))+ '€'});
-legend(labels)
-title("Prezzo di sostentamento da rete Enel Aprile") 
-
-% Agosto
-subplot(2,2,2)
-s2 = price_min * abs((E_sist_res(1440,2,:))*1.0e-06);
-pie(s2,{string(s2(1))+ '€',string(s2(2))+ '€',string(s2(3))+ '€'});
-legend(labels)
-title("Prezzo di sostentamento da rete Enel Agosto") 
-
-% Ottobre
-subplot(2,2,3)
-s3 = price_min * abs((E_sist_res(1440,3,:))*1.0e-06);
-pie(s3,{string(s3(1))+ '€',string(s3(2))+ '€',string(s3(3))+ '€'});
-legend(labels)
-title("Prezzo di sostentamento da rete Enel Ottobre") 
-
-% Dicembre
-subplot(2,2,4)
-s4 = price_min * abs((E_sist_res(1440,4,:))*1.0e-06);
-pie(s4,{string(s4(1))+ '€',string(s4(2))+ '€',string(s4(3))+ '€'});
-legend(labels)
-title("Prezzo di sostentamento da rete Enel Dicembre") 
-%}
-
-%% Grafici (15) ->  Prezzo di ricarica della batteria + (Perdita) Prezzo da pagare per il sostentamento
-
-%{
-figure(15)
-% Aprile
-labels = {'Soleggiato', 'parz. nuvoloso', 'Nuvoloso'};
-subplot(2,2,1)
-t1(1)=s1(1)+p1(1);
-t1(2)=s1(2)+p1(2);
-t1(3)=s1(3)+p1(3);
+t1(1)=perdita(1,1)+p1(1);
+t1(2)=perdita(1,2)+p1(2);
+t1(3)=perdita(1,3)+p1(3);
 pie(t1,{string(t1(1))+ '€',string(t1(2))+ '€',string(t1(3))+ '€'});
 legend(labels)
-title("Prezzo totale acquisto da rete Enel Aprile") 
+title("Prezzo totale di acquisto da rete Enel Aprile") 
 
 % Agosto
 subplot(2,2,2)
-t2(1)=s2(1)+p2(1);
-t2(2)=s2(2)+p2(2);
-t2(3)=s2(3)+p2(3);
+t2(1)=perdita(2,1)+p2(1);
+t2(2)=perdita(2,2)+p2(2);
+t2(3)=perdita(2,3)+p2(3);
 pie(t2,{string(t2(1))+ '€',string(t2(2))+ '€',string(t2(3))+ '€'});
 legend(labels)
-title("Prezzo totale acquisto da rete Enel Agosto") 
+title("Prezzo totale di acquisto da rete Enel Agosto") 
 
 % Ottobre
 subplot(2,2,3)
-t3(1)=s3(1)+p3(1);
-t3(2)=s3(2)+p3(2);
-t3(3)=s3(3)+p3(3);
+t3(1)=perdita(3,1)+p3(1);
+t3(2)=perdita(3,2)+p3(2);
+t3(3)=perdita(3,3)+p3(3);
 pie(t3,{string(t3(1))+ '€',string(t3(2))+ '€',string(t3(3))+ '€'});
 legend(labels)
-title("Prezzo totale acquisto da rete Enel Ottobre") 
+title("Prezzo totale di acquisto da rete Enel Ottobre") 
 
 % Dicembre
 subplot(2,2,4)
-t4(1)=s4(1)+p4(1);
-t4(2)=s4(2)+p4(2);
-t4(3)=s4(3)+p4(3);
+t4(1)=perdita(1,1)+p4(1);
+t4(2)=perdita(4,2)+p4(2);
+t4(3)=perdita(4,3)+p4(3);
 pie(t4,{string(t4(1))+ '€',string(t4(2))+ '€',string(t4(3))+ '€'});
 legend(labels)
-title("Prezzo totale acquisto da rete Enel Dicembre") 
-%}
+title("Prezzo totale di acquisto da rete Enel Dicembre") 
+
+
+%% Grafici (17) ->  Guadagno/Perdita giornaliero/a = Utile - Perdite
+figure(17)
+% Aprile
+g1(1)=guadagno(1440,1,1)-t1(1);
+g1(2)=guadagno(1440,1,2)-t1(2);
+g1(3)=guadagno(1440,1,3)-t1(3);
+
+% Agosto
+g2(1)=guadagno(1440,2,1)-t2(1);
+g2(2)=guadagno(1440,2,2)-t2(2);
+g2(3)=guadagno(1440,2,3)-t2(3);
+
+% Ottobre
+g3(1)=guadagno(1440,3,1)-t3(1);
+g3(2)=guadagno(1440,3,2)-t3(2);
+g3(3)=guadagno(1440,3,3)-t3(3);
+
+% Dicembre
+g4(1)=guadagno(1440,4,1)-t4(1);
+g4(2)=guadagno(1440,4,2)-t4(2);
+g4(3)=guadagno(1440,4,3)-t4(3);
+
+
+X = categorical({'Aprile','Agosto','Ottobre','Dicembre'});
+gtot=[g1;g2;g3;g4];
+bar(X,gtot)
+legend({'Soleggiato', 'parz. nuvoloso', 'Nuvoloso'});

@@ -113,7 +113,7 @@ classdef ACBattery
         end
         
        
-        function hour_max_battery = getHourMaxBattery(obj,Ebat_k,enel_average_power,hours,x,y)
+        function [hour_max_battery,a] = getHourMaxBattery(obj,Ebat_k,enel_average_power,hours,x,y)
             for i=1:1:length(Ebat_k)
                 for j=1:1:4
                     for k=1:1:3
@@ -128,6 +128,7 @@ classdef ACBattery
                     a1 = ora_dell_ore_di_ricarica_1_1(i,1);
                 end
             end
+             a=a1;
              hour_max_battery= timeofday(datetime(string(datestr(a1/24,'HH:MM')) ,'InputFormat','HH:mm'));
         end
         
