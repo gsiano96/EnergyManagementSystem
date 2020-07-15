@@ -68,7 +68,7 @@ classdef DCBattery
                         if Pinput(i,j,k) > 0
                             Pbat_k(i,j,k) = Pinput(i,j,k)*obj.Befficiency;
                         else
-                            Pbat_k(i,j,k) = Pinput(i,j,k)*obj.Befficiency; %TODO
+                            Pbat_k(i,j,k) = Pinput(i,j,k)/obj.Befficiency;
                         end
                     end
                 end

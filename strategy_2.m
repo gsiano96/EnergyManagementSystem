@@ -88,16 +88,16 @@ carico=Load(Pload_k);
 
 %Energia assorbita dal carico
 Eload_k = cumtrapz(0.0167,Pload_k);
-%figure(),plot(time_minutes,Eload_k(:)/1000),title 'Energia assorbita dal carico'
 
-Eload_med = Eload_k(1440)/24;
+%Eload_med = Eload_k(1440)/24;
+
 %% - Inverter Fotovoltaico Solarmax da 66kw DC -
 Prel_k=SolarmaxInverter.relativePower/100;
 efficiency_k=SolarmaxInverter.efficiency/100;
 
 % Aggiunto lo 0 per uniformare l'asse
 Prel_k=[0;Prel_k];
-efficiency_k=[0;efficiency_k];
+efficiency_k=[0.50;efficiency_k];
 
 % ATTENZIONE OTTIMIZZAZIONE INVERTER
 Pindcmax = 105*1e3;  %nominal P DC
@@ -112,14 +112,13 @@ Inverter = Solarmaxinverter(Prel_k,efficiency_k,Pindcmax,Poutacmax, inputVoltage
 %potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
 [Pin_inv_k,Pout_inv_k] = getCharacteristicPout_Pin(Inverter,true);
 
-
 %% Ottimizzazione numero di Pannelli
-Prel_r = max(efficiency_k);
+Prel_r = 0.50;
 efficiency_r = 0.948; %euro-efficiency
 Pload_med = mean(Pload_k); %TODO
 
-margin=(Prel_r * Pindcmax*efficiency_r - Pload_med); %[W] TODO
-Nmin_pannelli = ceil((margin+Pload_med)/(Pnom*efficiency_r))
+%margin=(Prel_r * Pindcmax*efficiency_r - Pload_med); %[W] TODO
+Nmin_pannelli=312; %ceil((margin+Pload_med)/(Pnom*efficiency_r))
 
 
 %% - Dimensionamento Potenze campo fotovoltaico -
@@ -129,6 +128,9 @@ Ppv_k=getMaxOutputPowerSTC(PvField,G_k);
 
 Ppv_k_scaled=rescaleMPPByTemperature(PvField,Ppv_k,T_k,G_k);
 
+
+Prelpv=Ppv_k_scaled/Pindcmax;
+efficiency_k=abs(interpolateInputRelativePower(Inverter,Prelpv,'spline'));
 
 % Interpolazione dei punti dell'asse Pinput corrispondenti a Ppv
 Ppv_out_k = interpolateInputPowerPoints(Inverter ,Ppv_k_scaled,'spline');
@@ -145,7 +147,7 @@ Epv_out_k=cumtrapz(0.0167,Ppv_out_k);
 %Differenza tra potenza erogata dal pannello e potenza assorbita dal carico
 for j=1:1:4
     for k=1:1:3
-        Presiduo_k(:,j,k) = Ppv_out_k(:,j,k) - Pload_k;
+        Presiduo_k(:,j,k) = Ppv_k_scaled(:,j,k) - Pload_k/efficiency_r; %efficiency_k(:,j,k)
     end
 end
 
@@ -172,9 +174,8 @@ P_bat = filterPower(Battery,Presiduo_k);
 Ebat_k = batteryEnergy_k(Battery,P_bat);
 
 %Potenza in uscita dall'inverter
-Prel_bat=abs(P_bat)/Pindcmax;
-IEff = interp1(Prel_k,efficiency_k,Prel_bat,'spline');
-
+%Prel_bat=abs(P_bat)/Pindcmax;
+%IEff = interp1(Prel_k,efficiency_k,Prel_bat,'spline');
 
 for j=1:1:4
     for k=1:1:3
@@ -216,6 +217,8 @@ charging_time = getTimeToReload(Battery,enel_average_power,Ebat_k);
 % giornata la stessa energia in batteria (in questo caso la capacita
 % massima)
 
+grid=EletricityGrid(3,900,1);
+
 %Aprile
 hour_max_battery_1_1 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,1,1);
 hour_max_battery_1_2 = getHourMaxBattery(Battery,Ebat_k,enel_average_power,hours,1,2);
@@ -248,6 +251,35 @@ price_min = (costi(20)+costi(21)+costi(22)+costi(23)+costi(24))/5;
 %% Evoluzione energia del sistema
 E_sist_res=(Epv_out_k-Eload_k-capacity);
 
+Ebat_carica=cumtrapz(0.0167,Pbat_carica);
+
+%Guadagno vendita energia
+guadagno=zeros(1440,4,3);
+for month=1:1:4
+    for caso=1:1:3
+        guadagno(:,month,caso)=grid.putPower_k(Ebat_carica(:,month,caso)/1000, fullCapacity/1000, 0.05);
+    end
+end
+
+%Potenza da prelevare dalla rete
+Pgrid=zeros(1440,4,3);
+for month=1:1:4
+    for caso=1:1:3
+        Pgrid(:,month,caso)=grid.getPowerDC_k(Ebat_k,7.829,78.29,Presiduo_k.*efficiency_k(:,month,caso));
+    end
+end
+
+%Costo prelievo dalla rete
+
+Egrid=cumtrapz(0.0167,Pgrid);
+costi=interp1(time_hours,costi,time_minutes,'spline');
+
+perdita=zeros(1440,4,3);
+for month=1:1:4
+    for caso=1:1:3
+        perdita(:,month,caso)=Egrid(:,month,caso)/1000.*costi/1000;
+    end
+end
 
 %% Grafici (1) -> Caratteristica ingresso-uscita Potenza PV tenendo conto dell'efficienza dell'inverter e temperatura
 
@@ -260,7 +292,7 @@ xlabel 'Pinput [kw]'
 ylabel 'Pout [kw]'
 
 subplot(2,1,2)
-plot(Prel_k,efficiency_k);
+plot(Prel_k,Inverter.efficiency_k);
 title("Caratteristica efficienza inverter") 
 xlabel 'Prel [%]'
 ylabel 'Rendimento [%]'
@@ -278,7 +310,7 @@ figure(2)
 h=zeros(1,3);
 for month=1:1:4
     subplot(2,2,month)
-    plot(Prel_k*100,efficiency_k*100)
+    plot(Prel_k*100,Inverter.efficiency_k*100)
     for caso=1:1:3
         xline(med_targetPrel(1,month,caso)*100,formats(caso),'Prel media = ' + string(med_targetPrel(1,month,caso)*100) + '%');
         h(caso)=xline(max_targetPrel(1,month,caso)*100,formats(caso),'Prel max = ' + string(max_targetPrel(1,month,caso)*100)+ '%');
@@ -298,7 +330,7 @@ legends=["Prel med-max batt.","Prel med-max fotovoltaico"];
 formats=["-r","-g"];
 h=zeros(1,2);
 
-plot(Prel_k*100,efficiency_k*100)
+plot(Prel_k*100,Inverter.efficiency_k*100)
 
 xline(mean(med_targetPrelbat(:))*100,formats(1),'Prel media = ' + string(mean(med_targetPrelbat(:))*100)+ '%');
 h(1)=xline(mean(max_targetPrelbat(:))*100,formats(1),'Prel max = ' + string(mean(max_targetPrelbat(:))*100)+ '%');
@@ -436,69 +468,16 @@ for month=1:1:4
     ylabel 'Energia [kWh]'
 end
 
-
-%% Grafici (10) -> Energia Residua in batteria a fine giornata
-figure(10)
-
-%NOTA:
-%L'energia residua � la stessa perch� raggiunto il limite di scarica,
-%la batteria si disattiva, e la sua energia rimane costante
-
-X = categorical({'Aprile','Agosto','Ottobre','Dicembre'});
-% Aprile
-for i = 1:1:3
-    Ebat_aprile(i) = Ebat_k(1440,1,i)/1000;
-end
-% Agosto
-for i = 1:1:3
-    Ebat_agosto(i) = Ebat_k(1440,2,i)/1000;
-end
-% Ottobre
-for i = 1:1:3
-    Ebat_ottobre(i) = Ebat_k(1440,3,i)/1000;
-end
-% Dicembre
-for i = 1:1:3
-    Ebat_dicembre(i) = Ebat_k(1440,4,i)/1000;
-end
-btot=[Ebat_aprile;Ebat_agosto;Ebat_ottobre;Ebat_dicembre];
-bar(X,btot)
-legend ({'soleggiato','parz. nuvoloso','nuvoloso'}); 
-title("Energia residua in batteria al termine della giornata") ;
-
-
-%% Grafici (11) ->  Ore di ricarica richieste dalla batteria
-
-figure(11)
-X = categorical({'Aprile','Agosto','Ottobre','Dicembre'});
-h1 =(charging_time(1,:));
-h2 =(charging_time(2,:));
-h3 =(charging_time(3,:));
-h4 =(charging_time(4,:));
-htot=[h1;h2;h3;h4];
-bar(X,htot)
-legend ({'soleggiato','parz. nuvoloso','nuvoloso'}); 
-title("Ore di ricarica richieste dalla batteria ") ;
-
-
-%% Grafici (12) ->  Ore fino a che possiamo scaricare la batteria
-figure(12)
-X = categorical({'Aprile','Agosto','Ottobre','Dicembre'});
-otot=[aprile_bar;agosto_bar;ottobre_bar;dicembre_bar];
-bar(X,otot)
-legend ({'soleggiato','parz. nuvoloso','nuvoloso'}); 
-title("Orario di partenza della fase di ricarica della batteria ");
-
 %% Grafici (13) ->  Costi d'acquisto Energia 
 figure(13)
-plot(time_hours, costi/1000)
+plot(time_minutes, costi/1000)
 xlabel('Ore del giorno')
 ylabel('Costo (/kWh)')
 title('Profilo di costo energia')
 
 
 %% Grafici (14) ->  Prezzo mensile di sostentamento da rete Enel 
-
+%{
 figure(14)
 
 % Aprile
@@ -528,44 +507,11 @@ subplot(2,2,4)
 s4 = price_min * abs((E_sist_res(1440,4,:))*1.0e-06);
 pie(s4,{string(s4(1))+ '',string(s4(2))+ '',string(s4(3))+ ''});
 legend(labels)
-title("Prezzo di sostentamento da rete Enel Dicembre") 
-
-
-%% Grafici (15) ->  Prezzo di ricarica della batteria da rete Enel 
-
-figure(15)
-
-% Aprile
-labels = {'soleggiato','parz. nuvoloso','nuvoloso'};
-subplot(2,2,1)
-p1 = price_min * ((capacity-Ebat_aprile*1000)*1.0e-06);
-pie(p1,{string(p1(1))+ '',string(p1(2))+ '',string(p1(3))+ ''});
-legend(labels)
-title("Prezzo di ricarica della batteria da rete Enel Aprile") 
-
-% Agosto
-subplot(2,2,2)
-p2 = price_min * ((capacity-Ebat_agosto*1000)*1.0e-06);
-pie(p2,{string(p2(1))+ '',string(p2(2))+ '',string(p2(3))+ ''});
-legend(labels)
-title("Prezzo di ricarica della batteria da rete Enel Agosto") 
-
-% Ottobre
-subplot(2,2,3)
-p3 = price_min * ((capacity-Ebat_ottobre*1000)*1.0e-06);
-pie(p3,{string(p3(1))+ '',string(p3(2))+ '',string(p3(3))+ ''});
-legend(labels)
-title("Prezzo di ricarica della batteria da rete Enel Ottobre") 
-
-% Dicembre
-subplot(2,2,4)
-p4 = price_min * ((capacity-Ebat_dicembre*1000)*1.0e-06);
-pie(p4,{string(p4(1))+ '',string(p4(2))+ '',string(p4(3))+ ''});
-legend(labels)
-title("Prezzo di ricarica della batteria da rete Enel Dicembre") 
+title("Prezzo di sostentamento da rete Enel Dicembre")
+%}
 
 %% Grafici (16) ->  Prezzo mensile di sostentamento da rete Enel 
-
+%{
 figure(16)
 
 % Aprile
@@ -604,4 +550,53 @@ t4(3)=s4(3)+p4(3);
 pie(t4,{string(t4(1))+ '',string(t4(2))+ '',string(t4(3))+ ''});
 legend(labels)
 title("Prezzo totale acquisto da rete Enel Dicembre") 
+%}
+%% Grafici
+titles=["Aprile","Agosto","Ottobre","Dicembre"];
 
+figure(17)
+
+for month=1:1:4
+    subplot(2,2,month)
+    for caso=1:1:3
+        plot(time_minutes,Pbat_carica(:,month,caso)/1000)
+        hold on
+    end
+    legend('soleggiato','parz. nuvoloso','nuvoloso');
+    title(titles(month))
+    xlabel("time")
+    ylabel("Pcarica(k)");
+end
+
+figure(18)
+
+for month=1:1:4
+    subplot(2,2,month)
+    for caso=1:1:3
+        plot(time_minutes,Ebat_carica(:,month,caso)/1000)
+        hold on
+    end
+    legend('soleggiato','parz. nuvoloso','nuvoloso');
+    title(titles(month))
+    xlabel("time")
+    ylabel("Ecarica(k)");
+    yline(fullCapacity/1000,'-r','Capacit� Batteria = ' + string(fullCapacity/1000) + 'kWh');
+end
+
+%% Grafici
+
+figure(19)
+titles={'soleggiato','parz. nuvoloso','nuvoloso'};
+for month=1:1:4
+    subplot(2,2,month)
+    pie([guadagno(1440,month,1) guadagno(1440,month,2) guadagno(1440,month,3)],{string(guadagno(1440,month,1))+" � a "+titles(1), string(guadagno(1440,month,2))+" � a "+titles(2), string(guadagno(1440,month,3))+" � a "+titles(3)})
+end
+
+%% Grafici
+
+figure(20)
+titles={'soleggiato','parz. nuvoloso','nuvoloso'};
+for month=1:1:4
+    subplot(2,2,month)
+    pie([perdita(1440,month,1) perdita(1440,month,2) perdita(1440,month,3)],{string(-perdita(1440,month,1))+" � a "+titles(1), string(-perdita(1440,month,2))+" � a "+titles(2), string(-perdita(1440,month,3))+" � a "+titles(3)})
+end
